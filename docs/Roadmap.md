@@ -19,6 +19,7 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 - [ ] Grid or AABB Tree so the engine doesn't lag when there are 20+ objects  
 
 # Along the way
+- [ ] Unit tests?
 - [ ] Explore C++ build tools (and don't use just CLion's built-in ones)
 - [ ] Implement more of the math myself, e.g. SIMD (SSE/AVX)
 - [ ] Memory management - maybe an arena allocator?
