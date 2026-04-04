@@ -2,6 +2,16 @@
 docs/.obsidian/workspace.json
 docs/.obsidian/graph.json
 
+# IDE
+.idea/
+
+# Packages
+vcpkg_installed/
+
+# Build files
+build/
+
+
 # Prerequisites
 *.d
 
