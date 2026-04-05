@@ -1,8 +1,11 @@
+#include "math/vec2.h"
+#include "math/vec3.h"
 #include "renderer/renderer.h"
 
-#include <SDL3/SDL.h>
 #include <cmath>
+#include <ranges>
 #include <vector>
+#include <SDL3/SDL.h>
 
 namespace {
 
@@ -24,20 +27,22 @@ bool handle_events() {
   return false;
 }
 
-void render_spectrum(renderer::Renderer& renderer) {
-  for (int y = 0; y < renderer::window::height; y++) {
-    for (int x = 0; x < renderer::window::width; x++) {
-      constexpr float frequency = 0.005f;
-      Uint8 r = static_cast<Uint8>(sin(frequency * x + 0.0f) * 127 + 128);
-      Uint8 g = static_cast<Uint8>(sin(frequency * x + 2.094f) * 127 + 128); // 2.094 is approx 2pi/3
-      Uint8 b = static_cast<Uint8>(sin(frequency * x + 4.188f) * 127 + 128); // 4.188 is approx 4pi/3
+Vec2 project(Vec3 point) {
+  return {
+      point.x / point.z,
+      point.y / point.z
+  };
+}
 
-      const float brightness = 1.0f - (static_cast<float>(y) / renderer::window::height);
-      r *= brightness;
-      g *= brightness;
-      b *= brightness;
-
-      renderer.draw_pixel(x, y, (255 << 24) | (r << 16) | (g << 8) | b);
+void draw_rect(renderer::Renderer& renderer,
+               const int x,
+               const int y,
+               const int width,
+               const int height,
+               const uint32_t color) {
+  for (int i = x; i < x + width; i++) {
+    for (int j = y; j < y + height; j++) {
+      renderer.draw_pixel(i, j, color);
     }
   }
 }
@@ -56,10 +61,34 @@ int main(int argc, char* argv[]) {
   bool quit = false;
   auto renderer = renderer::Renderer(renderer::window::width, renderer::window::height);
 
+  const Vec3 camera_pos = {0, 0, -5};
+
+  std::vector<Vec3> cube_points(9 * 9 * 9);
+  int i = 0;
+
+  for (float x = -1; x <= 1; x += 0.25) {
+    for (float y = -1; y <= 1; y += 0.25) {
+      for (float z = -1; z <= 1; z += 0.25) {
+        cube_points[i++] = {x, y, z - camera_pos.z};
+      }
+    }
+  }
+
   while (!quit) {
     quit = handle_events();
 
-    render_spectrum(renderer);
+    for (auto projected_points = cube_points | std::views::transform(project); auto p : projected_points) {
+      auto const fov_factor = 640;
+
+      draw_rect(
+          renderer,
+          fov_factor * p.x + renderer::window::width / 2,
+          fov_factor * p.y + renderer::window::height / 2,
+          4,
+          4,
+          0xFFFFFF00
+          );
+    }
 
     renderer.present(*sdl_renderer, *display_texture);
   }

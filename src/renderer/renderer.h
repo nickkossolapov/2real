@@ -1,8 +1,8 @@
 #ifndef INC_2REAL_DISPLAY_H
 #define INC_2REAL_DISPLAY_H
 
-#include <SDL3/SDL.h>
 #include <vector>
+#include <SDL3/SDL.h>
 
 namespace renderer {
 
