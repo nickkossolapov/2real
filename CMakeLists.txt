@@ -6,5 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(SDL3 CONFIG REQUIRED)
 
-add_executable(2real src/main.cpp)
+add_executable(2real
+        src/main.cpp
+        src/renderer/renderer.cpp)
 target_link_libraries(2real PRIVATE SDL3::SDL3)

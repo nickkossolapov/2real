@@ -1,4 +1,4 @@
-Checks: '-*,readability-identifier-naming'
+Checks: '-*,readability-identifier-naming,misc-use-internal-linkage'
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
@@ -16,6 +16,8 @@ CheckOptions:
     value: lower_case
   - key: readability-identifier-naming.MemberCase
     value: lower_case
+  - key: readability-identifier-naming.MemberSuffix
+    value: '_'
   - key: readability-identifier-naming.ConstexprVariableCase
     value: lower_case
   - key: readability-identifier-naming.GlobalConstantCase

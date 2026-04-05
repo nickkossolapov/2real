@@ -5,7 +5,10 @@ BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
+PackConstructorInitializers: Never
 BinPackParameters: false
 BinPackArguments: false
+FixNamespaceComments: true
+MaxEmptyLinesToKeep: 1
 SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
