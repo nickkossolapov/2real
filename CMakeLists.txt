@@ -8,8 +8,10 @@ find_package(SDL3 CONFIG REQUIRED)
 
 add_executable(2real
         src/main.cpp
-        src/renderer/renderer.cpp
+        src/render/graphics.cpp
         src/math/vec2.h
         src/math/vec3.h
-        src/renderer/camera.h)
+        src/render/camera.h
+        src/input.h
+        src/engine/timing.h)
 target_link_libraries(2real PRIVATE SDL3::SDL3)

@@ -31,3 +31,4 @@ A lot of this will be following existing resources, so these are mostly referenc
 * Pikuma's 3D Graphics & Physics Courses
 * Real-Time Collision Detection by Christer Ericson
 * Game Engine Architecture by Jason Gregory
+* Read about Data Orientated Design

@@ -1,19 +1,20 @@
-#include "renderer.h"
+#include "graphics.h"
 
-namespace renderer {
+namespace graphics {
 
-Renderer::Renderer(const int width, const int height)
-    : width_(width),
-      height_(height),
-      color_buffer_(height * width) {}
+Context::Context(const int width, const int height)
+  : width_(width),
+    height_(height),
+    color_buffer_(height * width) {
+}
 
-void Renderer::draw_pixel(int x, int y, uint32_t color) {
+void Context::draw_pixel(int x, int y, uint32_t color) {
   if (x >= 0 && x < width_ && y >= 0 && y < height_) {
     color_buffer_[y * width_ + x] = color;
   }
 }
 
-void Renderer::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
+void Context::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_RenderClear(&renderer);
 
   SDL_UpdateTexture(&display_texture, nullptr, color_buffer_.data(), window::width * sizeof(uint32_t));
@@ -23,7 +24,10 @@ void Renderer::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_RenderPresent(&renderer);
 }
 
-InitError init(SDL_Window*& window, SDL_Renderer*& renderer, SDL_Texture*& display_texture) {
+InitError init_sdl(SDL_Window*& window,
+                   SDL_Renderer*& renderer,
+                   SDL_Texture*& display_texture,
+                   const bool enable_v_sync) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("SDL_Init Error: %s\n", SDL_GetError());
 
@@ -34,6 +38,14 @@ InitError init(SDL_Window*& window, SDL_Renderer*& renderer, SDL_Texture*& displ
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
 
     return InitError::WindowCreate;
+  }
+
+  if (enable_v_sync) {
+    if (SDL_SetRenderVSync(renderer, 1) == false) {
+      SDL_Log("Could not enable VSync! SDL error: %s\n", SDL_GetError());
+
+      return InitError::VSyncEnable;
+    }
   }
 
   display_texture =
@@ -48,4 +60,4 @@ InitError init(SDL_Window*& window, SDL_Renderer*& renderer, SDL_Texture*& displ
   return InitError::None;
 }
 
-} // namespace renderer
+} // namespace graphics
