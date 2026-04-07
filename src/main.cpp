@@ -1,7 +1,9 @@
 #include "engine/timing.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
+#include "render/draw.h"
 #include "render/graphics.h"
+#include "render/triangle.h"
 
 #include <cmath>
 #include <ranges>
@@ -28,42 +30,59 @@ bool process_input() {
   return false;
 }
 
-Vec2 project(const Vec3 point, const Vec3 camera_pos) {
+Vec2 project(const Vec3& p, const Vec3 camera_pos) {
+  constexpr int fov_factor = 640;
+
   return {
-      point.x / (point.z - camera_pos.z),
-      point.y / (point.z - camera_pos.z)
+      fov_factor * p.x / (p.z - camera_pos.z) + graphics::window::width / 2,
+      fov_factor * p.y / (p.z - camera_pos.z) + graphics::window::height / 2
   };
 }
 
-void draw_rect(graphics::Context& renderer,
-               const int x,
-               const int y,
-               const int width,
-               const int height,
-               const uint32_t color) {
-  for (int i = x; i < x + width; i++) {
-    for (int j = y; j < y + height; j++) {
-      renderer.draw_pixel(i, j, color);
-    }
-  }
+
+std::vector<Vec3> cube_vertices = {
+    {-1, -1, -1},
+    {-1, 1, -1},
+    {1, 1, -1},
+    {1, -1, -1},
+    {1, 1, 1},
+    {1, -1, 1},
+    {-1, 1, 1},
+    {-1, -1, 1}
+};
+
+std::vector<Face> cube_faces = {
+    // front
+    {1, 2, 3},
+    {1, 3, 4},
+    // right
+    {4, 3, 5},
+    {4, 5, 6},
+    // back
+    {6, 5, 7},
+    {6, 7, 8},
+    // left
+    {8, 7, 2},
+    {8, 2, 1},
+    // top
+    {2, 7, 5},
+    {2, 5, 3},
+    // bottom
+    {6, 8, 1},
+    {6, 1, 4}
+};
+
+std::vector<Triangle> make_cube() {
+  auto view =
+      cube_faces
+      | std::views::transform([](const Face face) {
+        return Triangle(cube_vertices[face.a - 1], cube_vertices[face.b - 1], cube_vertices[face.c - 1]);
+      });
+
+  return std::vector(view.begin(), view.end());
 }
 
-std::vector<Vec3> make_cube() {
-  std::vector<Vec3> cube_points(9 * 9 * 9);
-  int p = 0;
-
-  for (float x = -1; x <= 1; x += 0.25) {
-    for (float y = -1; y <= 1; y += 0.25) {
-      for (float z = -1; z <= 1; z += 0.25) {
-        cube_points[p++] = {x, y, z};
-      }
-    }
-  }
-
-  return cube_points;
-}
-
-void update(float dt, Vec3& cube_rotation) {
+void update(const float dt, Vec3& cube_rotation) {
   constexpr float rotate_speed = 0.0005f;
 
   cube_rotation.x += dt * rotate_speed;
@@ -71,29 +90,19 @@ void update(float dt, Vec3& cube_rotation) {
   cube_rotation.z += dt * rotate_speed;
 }
 
-void render_scene(graphics::Context& renderer, std::vector<Vec3>& cube_points, Vec3 camera_pos, Vec3 cube_rotation) {
-  const auto projected_points =
-      cube_points
-      | std::views::transform([cube_rotation](const Vec3 v) {
-        auto transformed_point = vec3::rotate_x(v, cube_rotation.x);
-        transformed_point = vec3::rotate_y(transformed_point, cube_rotation.y);
-        transformed_point = vec3::rotate_z(transformed_point, cube_rotation.z);
 
-        return transformed_point;
-      })
-      | std::views::transform([camera_pos](const Vec3 v) { return project(v, camera_pos); });
+void render_scene(graphics::Context& context,
+                  const std::vector<Triangle>& cube_triangles,
+                  const Vec3 camera_pos,
+                  const Vec3 cube_rotation) {
+  for (const Triangle& t : cube_triangles) {
+    const Vec2 a = project(vec3::rotate(t.a, cube_rotation), camera_pos);
+    const Vec2 b = project(vec3::rotate(t.b, cube_rotation), camera_pos);
+    const Vec2 c = project(vec3::rotate(t.c, cube_rotation), camera_pos);
 
-  for (auto p : projected_points) {
-    constexpr auto fov_factor = 640;
-
-    draw_rect(
-        renderer,
-        fov_factor * p.x + graphics::window::width / 2,
-        fov_factor * p.y + graphics::window::height / 2,
-        4,
-        4,
-        0xFFFFFF00
-        );
+    draw::line(context, a.x, a.y, b.x, b.y, 0xFFFFFF00);
+    draw::line(context, b.x, b.y, c.x, c.y, 0xFFFFFF00);
+    draw::line(context, c.x, c.y, a.x, a.y, 0xFFFFFF00);
   }
 }
 
@@ -117,7 +126,7 @@ int main(int argc, char* argv[]) {
 
   Vec3 camera_pos = {0, 0, -5};
   Vec3 cube_rotation = {0, 0, 0};
-  auto cube_points = make_cube();
+  const auto cube_points = make_cube();
 
   while (!quit) {
     quit = process_input();

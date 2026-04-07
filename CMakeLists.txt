@@ -13,5 +13,8 @@ add_executable(2real
         src/math/vec3.h
         src/render/camera.h
         src/input.h
-        src/engine/timing.h)
+        src/engine/timing.h
+        src/render/triangle.h
+        src/render/draw.h
+        src/render/draw.cpp)
 target_link_libraries(2real PRIVATE SDL3::SDL3)

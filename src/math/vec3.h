@@ -32,5 +32,9 @@ inline Vec3 rotate_z(const Vec3& v, const float angle) {
   };
 }
 
+inline Vec3 rotate(const Vec3& v, const Vec3& rot) {
+  return rotate_x(rotate_y(rotate_z(v, rot.z), rot.y), rot.x);
+}
+
 } // namespace vec3
 

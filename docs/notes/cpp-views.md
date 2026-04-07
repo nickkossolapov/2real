@@ -24,5 +24,7 @@ If just iterating, has some benefits like being able to chain operations, no all
 Putting it back into an array:
 
 ``` cpp
+| std::ranges::to<std::vector>(); // C++23
+// or 
 std::vector<int> evaluated_vec(view.begin(), view.end());
 ```
