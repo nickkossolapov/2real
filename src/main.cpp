@@ -3,12 +3,15 @@
 #include "math/vec3.h"
 #include "render/draw.h"
 #include "render/graphics.h"
+#include "render/mesh.h"
+#include "render/obj_loader.h"
 #include "render/triangle.h"
 
-#include <cmath>
 #include <ranges>
 #include <vector>
 #include <SDL3/SDL.h>
+
+struct Mesh;
 
 namespace {
 
@@ -39,66 +42,36 @@ Vec2 project(const Vec3& p, const Vec3 camera_pos) {
   };
 }
 
-
-std::vector<Vec3> cube_vertices = {
-    {-1, -1, -1},
-    {-1, 1, -1},
-    {1, 1, -1},
-    {1, -1, -1},
-    {1, 1, 1},
-    {1, -1, 1},
-    {-1, 1, 1},
-    {-1, -1, 1}
-};
-
-std::vector<Face> cube_faces = {
-    // front
-    {1, 2, 3},
-    {1, 3, 4},
-    // right
-    {4, 3, 5},
-    {4, 5, 6},
-    // back
-    {6, 5, 7},
-    {6, 7, 8},
-    // left
-    {8, 7, 2},
-    {8, 2, 1},
-    // top
-    {2, 7, 5},
-    {2, 5, 3},
-    // bottom
-    {6, 8, 1},
-    {6, 1, 4}
-};
-
-std::vector<Triangle> make_cube() {
+std::vector<Triangle> make_triangles(const Mesh& mesh) {
   auto view =
-      cube_faces
-      | std::views::transform([](const Face face) {
-        return Triangle(cube_vertices[face.a - 1], cube_vertices[face.b - 1], cube_vertices[face.c - 1]);
+      mesh.faces
+      | std::views::transform([mesh](const Face face) {
+        return Triangle(
+            vec3::rotate(mesh.vertices[face.a], mesh.rotation),
+            vec3::rotate(mesh.vertices[face.b], mesh.rotation),
+            vec3::rotate(mesh.vertices[face.c], mesh.rotation));
       });
 
   return std::vector(view.begin(), view.end());
 }
 
-void update(const float dt, Vec3& cube_rotation) {
+void update(const float dt, Mesh& mesh) {
   constexpr float rotate_speed = 0.0005f;
 
-  cube_rotation.x += dt * rotate_speed;
-  cube_rotation.y += dt * rotate_speed;
-  cube_rotation.z += dt * rotate_speed;
+  mesh.rotation.x += dt * rotate_speed;
+  mesh.rotation.y += dt * rotate_speed;
+  mesh.rotation.z += dt * rotate_speed;
 }
 
-
 void render_scene(graphics::Context& context,
-                  const std::vector<Triangle>& cube_triangles,
-                  const Vec3 camera_pos,
-                  const Vec3 cube_rotation) {
-  for (const Triangle& t : cube_triangles) {
-    const Vec2 a = project(vec3::rotate(t.a, cube_rotation), camera_pos);
-    const Vec2 b = project(vec3::rotate(t.b, cube_rotation), camera_pos);
-    const Vec2 c = project(vec3::rotate(t.c, cube_rotation), camera_pos);
+                  const Mesh& mesh,
+                  const Vec3 camera_pos) {
+  auto triangles = make_triangles(mesh);
+
+  for (const Triangle& t : triangles) {
+    const Vec2 a = project(t.a, camera_pos);
+    const Vec2 b = project(t.b, camera_pos);
+    const Vec2 c = project(t.c, camera_pos);
 
     draw::line(context, a.x, a.y, b.x, b.y, 0xFFFFFF00);
     draw::line(context, b.x, b.y, c.x, c.y, 0xFFFFFF00);
@@ -107,6 +80,12 @@ void render_scene(graphics::Context& context,
 }
 
 } // namespace
+
+void destroy(SDL_Window* window, SDL_Renderer* sdl_renderer) {
+  SDL_DestroyRenderer(sdl_renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
 int main(int argc, char* argv[]) {
   SDL_Window* window = nullptr;
@@ -117,30 +96,30 @@ int main(int argc, char* argv[]) {
 
   if (auto init_res = graphics::init_sdl(window, sdl_renderer, display_texture, enable_v_sync);
     init_res != graphics::InitError::None) {
+
     return static_cast<int>(init_res);
   }
+
+  Mesh test_mesh;
+  load_obj_file("./assets/f22.obj", test_mesh);
 
   bool quit = false;
   auto renderer = graphics::Context(graphics::window::width, graphics::window::height);
   auto frame_limiter = FrameLimiter(60, enable_v_sync);
 
-  Vec3 camera_pos = {0, 0, -5};
-  Vec3 cube_rotation = {0, 0, 0};
-  const auto cube_points = make_cube();
-
   while (!quit) {
+    constexpr Vec3 camera_pos = {0, 0, -5};
+
     quit = process_input();
     const float dt = frame_limiter.tick();
 
-    update(dt, cube_rotation);
+    update(dt, test_mesh);
 
-    render_scene(renderer, cube_points, camera_pos, cube_rotation);
+    render_scene(renderer, test_mesh, camera_pos);
     renderer.present(*sdl_renderer, *display_texture);
   }
 
-  SDL_DestroyRenderer(sdl_renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+  destroy(window, sdl_renderer);
 
   return 0;
 }

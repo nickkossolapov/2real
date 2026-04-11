@@ -32,3 +32,4 @@ A lot of this will be following existing resources, so these are mostly referenc
 * Real-Time Collision Detection by Christer Ericson
 * Game Engine Architecture by Jason Gregory
 * Read about Data Orientated Design
+* https://github.com/zauonlok/renderer?tab=readme-ov-file#miscellaneous

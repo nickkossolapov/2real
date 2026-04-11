@@ -16,5 +16,12 @@ add_executable(2real
         src/engine/timing.h
         src/render/triangle.h
         src/render/draw.h
-        src/render/draw.cpp)
+        src/render/draw.cpp
+        src/render/mesh.h
+        src/render/obj_loader.h
+        src/render/obj_loader.cpp)
 target_link_libraries(2real PRIVATE SDL3::SDL3)
+
+add_custom_command(TARGET 2real POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:2real>/assets)
