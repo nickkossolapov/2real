@@ -5,13 +5,10 @@
 #include "render/graphics.h"
 #include "render/mesh.h"
 #include "render/obj_loader.h"
-#include "render/triangle.h"
 
 #include <ranges>
 #include <vector>
 #include <SDL3/SDL.h>
-
-struct Mesh;
 
 namespace {
 
@@ -37,20 +34,31 @@ Vec2 project(const Vec3& p, const Vec3 camera_pos) {
   constexpr int fov_factor = 640;
 
   return {
-      fov_factor * p.x / (p.z - camera_pos.z) + graphics::window::width / 2,
-      fov_factor * p.y / (p.z - camera_pos.z) + graphics::window::height / 2
+      fov_factor * (p.x - camera_pos.x) / (p.z - camera_pos.z) + graphics::window::width / 2,
+      fov_factor * (p.y - camera_pos.y) / (p.z - camera_pos.z) + graphics::window::height / 2
   };
 }
 
-std::vector<Triangle> make_triangles(const Mesh& mesh) {
+bool is_front_facing(const Triangle& triangle, const Vec3& camera_pos) {
+  const Vec3 normal = vec3::cross(triangle.b - triangle.a, triangle.c - triangle.a);
+  const Vec3 to_camera = camera_pos - triangle.a;
+
+  return vec3::dot(normal, to_camera) > 0;
+}
+
+std::vector<Triangle> transform_mesh(const Mesh& mesh, const Vec3& camera_pos) {
+  auto make_triangle = [&mesh](const Face& face) {
+    return Triangle(
+        vec3::rotate(mesh.vertices[face.a], mesh.rotation),
+        vec3::rotate(mesh.vertices[face.b], mesh.rotation),
+        vec3::rotate(mesh.vertices[face.c], mesh.rotation));
+  };
+  auto check_back_face_culling = [&camera_pos](const Triangle& t) { return is_front_facing(t, camera_pos); };
+
   auto view =
       mesh.faces
-      | std::views::transform([mesh](const Face face) {
-        return Triangle(
-            vec3::rotate(mesh.vertices[face.a], mesh.rotation),
-            vec3::rotate(mesh.vertices[face.b], mesh.rotation),
-            vec3::rotate(mesh.vertices[face.c], mesh.rotation));
-      });
+      | std::views::transform(make_triangle)
+      | std::views::filter(check_back_face_culling);
 
   return std::vector(view.begin(), view.end());
 }
@@ -66,16 +74,15 @@ void update(const float dt, Mesh& mesh) {
 void render_scene(graphics::Context& context,
                   const Mesh& mesh,
                   const Vec3 camera_pos) {
-  auto triangles = make_triangles(mesh);
 
-  for (const Triangle& t : triangles) {
+  for (const auto triangles = transform_mesh(mesh, camera_pos); const Triangle& t : triangles) {
     const Vec2 a = project(t.a, camera_pos);
     const Vec2 b = project(t.b, camera_pos);
     const Vec2 c = project(t.c, camera_pos);
 
-    draw::line(context, a.x, a.y, b.x, b.y, 0xFFFFFF00);
-    draw::line(context, b.x, b.y, c.x, c.y, 0xFFFFFF00);
-    draw::line(context, c.x, c.y, a.x, a.y, 0xFFFFFF00);
+    draw::line(context, a.x, a.y, b.x, b.y, 0xFF00FF00);
+    draw::line(context, b.x, b.y, c.x, c.y, 0xFF00FF00);
+    draw::line(context, c.x, c.y, a.x, a.y, 0xFF00FF00);
   }
 }
 
@@ -101,7 +108,7 @@ int main(int argc, char* argv[]) {
   }
 
   Mesh test_mesh;
-  load_obj_file("./assets/f22.obj", test_mesh);
+  load_obj_file("./assets/cube.obj", test_mesh);
 
   bool quit = false;
   auto renderer = graphics::Context(graphics::window::width, graphics::window::height);

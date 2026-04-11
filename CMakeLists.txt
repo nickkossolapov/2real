@@ -14,7 +14,6 @@ add_executable(2real
         src/render/camera.h
         src/input.h
         src/engine/timing.h
-        src/render/triangle.h
         src/render/draw.h
         src/render/draw.cpp
         src/render/mesh.h
@@ -23,5 +22,5 @@ add_executable(2real
 target_link_libraries(2real PRIVATE SDL3::SDL3)
 
 add_custom_command(TARGET 2real POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:2real>/assets)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:2real>/assets)
