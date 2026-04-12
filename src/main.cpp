@@ -6,6 +6,7 @@
 #include "render/mesh.h"
 #include "render/obj_loader.h"
 
+#include <algorithm>
 #include <ranges>
 #include <vector>
 #include <SDL3/SDL.h>
@@ -46,6 +47,17 @@ bool is_front_facing(const Triangle& triangle, const Vec3& camera_pos) {
   return vec3::dot(normal, to_camera) > 0;
 }
 
+void sort_by_depth(std::vector<Triangle>& triangles) {
+  auto comparer = [](const Triangle& l, const Triangle& r) {
+    const float z_l = l.a.z + l.b.z + l.c.z;
+    const float z_r = r.a.z + r.b.z + r.c.z;
+
+    return z_l > z_r;
+  };
+
+  std::ranges::sort(triangles.begin(), triangles.end(), comparer);
+}
+
 std::vector<Triangle> transform_mesh(const Mesh& mesh, const Vec3& camera_pos) {
   auto make_triangle = [&mesh](const Face& face) {
     return Triangle(
@@ -60,15 +72,18 @@ std::vector<Triangle> transform_mesh(const Mesh& mesh, const Vec3& camera_pos) {
       | std::views::transform(make_triangle)
       | std::views::filter(check_back_face_culling);
 
-  return std::vector(view.begin(), view.end());
+  auto materialized = std::vector(view.begin(), view.end());
+  sort_by_depth(materialized);
+
+  return materialized;
 }
 
 void update(const float dt, Mesh& mesh) {
   constexpr float rotate_speed = 0.0005f;
 
   mesh.rotation.x += dt * rotate_speed;
-  mesh.rotation.y += dt * rotate_speed;
-  mesh.rotation.z += dt * rotate_speed;
+  // mesh.rotation.y += dt * rotate_speed;
+  // mesh.rotation.z += dt * rotate_speed;
 }
 
 void render_scene(graphics::Context& context,
@@ -107,8 +122,7 @@ int main(int argc, char* argv[]) {
   }
 
   Mesh test_mesh;
-  load_obj_file("./assets/cube.obj", test_mesh);
-  test_mesh.rotation.z = 2.2;
+  load_obj_file("./assets/f22.obj", test_mesh);
 
   bool quit = false;
   auto renderer = graphics::Context(graphics::window::width, graphics::window::height);
