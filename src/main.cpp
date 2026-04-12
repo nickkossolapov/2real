@@ -64,11 +64,11 @@ std::vector<Triangle> transform_mesh(const Mesh& mesh, const Vec3& camera_pos) {
 }
 
 void update(const float dt, Mesh& mesh) {
-  constexpr float rotate_speed = 0.00005f;
+  constexpr float rotate_speed = 0.0005f;
 
-  // mesh.rotation.x += dt * rotate_speed;
-  // mesh.rotation.y += dt * rotate_speed;
-  // mesh.rotation.z += dt * rotate_speed;
+  mesh.rotation.x += dt * rotate_speed;
+  mesh.rotation.y += dt * rotate_speed;
+  mesh.rotation.z += dt * rotate_speed;
 }
 
 void render_scene(graphics::Context& context,
@@ -81,7 +81,7 @@ void render_scene(graphics::Context& context,
     const Vec2 c = project(t.c, camera_pos);
 
     draw::filled_triangle(context, a, b, c, 0xFFFFFFFF);
-    // draw::triangle(context, a, b, c, 0xFF000000);
+    draw::triangle(context, a, b, c, 0xFF000000);
   }
 }
 

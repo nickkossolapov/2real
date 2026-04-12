@@ -48,10 +48,9 @@ void triangle(Context& context, const Vec2& v0, const Vec2& v1, const Vec2& v2, 
 
 namespace {
 
-void flat_line(Context& context, const float yf, const float x1, const float x2, const uint32_t color) {
+void flat_line(Context& context, const int y, const float x1, const float x2, const uint32_t color) {
   const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
   const int right = static_cast<int>(std::floor(std::max(x1, x2)));
-  const int y = std::lround(yf);
 
   for (int x = left; x <= right; x++) {
     context.draw_pixel(x, y, color);
@@ -59,32 +58,36 @@ void flat_line(Context& context, const float yf, const float x1, const float x2,
 }
 
 void filled_flat_bottom(Context& context, const Vec2& top, const Vec2& mid1, const Vec2& mid2, const uint32_t color) {
-  const float m1 = (top.x - mid1.x) / (top.y - mid1.y);
-  const float m2 = (top.x - mid2.x) / (top.y - mid2.y);
+  const float m1 = (mid1.x - top.x) / (mid1.y - top.y);
+  const float m2 = (mid2.x - top.x) / (mid2.y - top.y);
 
-  float x_start = top.x, x_end = top.x;
+  const int y_start = static_cast<int>(std::ceil(top.y));
+  const int y_end = static_cast<int>(std::floor(mid1.y));
 
-  for (float y = top.y; y < mid1.y; y++) {
+  for (int y = y_start; y <= y_end; y++) {
+    const float dy = static_cast<float>(y) - top.y;
+    const float x_start = top.x + m1 * dy;
+    const float x_end = top.x + m2 * dy;
+
     flat_line(context, y, x_start, x_end, color);
-
-    x_start += m1;
-    x_end += m2;
   }
-};
+}
 
 void filled_flat_top(Context& context, const Vec2& bottom, const Vec2& mid1, const Vec2& mid2, const uint32_t color) {
-  const float m1 = (bottom.x - mid1.x) / (bottom.y - mid1.y);
-  const float m2 = (bottom.x - mid2.x) / (bottom.y - mid2.y);
+  const float m1 = (mid1.x - bottom.x) / (mid1.y - bottom.y);
+  const float m2 = (mid2.x - bottom.x) / (mid2.y - bottom.y);
 
-  float x_start = bottom.x, x_end = bottom.x;
+  const int y_start = static_cast<int>(std::ceil(mid1.y));
+  const int y_end = static_cast<int>(std::floor(bottom.y));
 
-  for (float y = bottom.y; y > mid1.y; y--) {
+  for (int y = y_start; y <= y_end; y++) {
+    const float dy = static_cast<float>(y) - bottom.y;
+    const float x_start = bottom.x + m1 * dy;
+    const float x_end = bottom.x + m2 * dy;
+
     flat_line(context, y, x_start, x_end, color);
-
-    x_start -= m1;
-    x_end -= m2;
   }
-};
+}
 
 }
 
@@ -103,22 +106,21 @@ void filled_triangle(Context& context, const Vec2& v0, const Vec2& v1, const Vec
     std::swap(v_top, v_mid);
   }
 
-  if (v_bottom.y - v_top.y < std::numeric_limits<float>::epsilon()) {
-    return; // Don't draw triangles with no height
-  }
+  if (std::abs(v_mid.y - v_bottom.y) < std::numeric_limits<float>::epsilon()) {
+    filled_flat_bottom(context, v_top, v_bottom, v_mid, color);
+  } else if (std::abs(v_top.y - v_mid.y) < std::numeric_limits<float>::epsilon()) {
+    filled_flat_top(context, v_bottom, v_top, v_mid, color);
+  } else {
 
-  Vec2 v_mid_computed = {
-      .x = v_top.x + (v_bottom.x - v_top.x) * (v_mid.y - v_top.y) / (v_bottom.y - v_top.y),
-      .y = v_mid.y
+    const Vec2 v_mid_computed = {
+        .x = v_top.x + (v_bottom.x - v_top.x) * (v_mid.y - v_top.y) / (v_bottom.y - v_top.y),
+        .y = v_mid.y
+    };
+
+    filled_flat_bottom(context, v_top, v_mid, v_mid_computed, color);
+    filled_flat_top(context, v_bottom, v_mid, v_mid_computed, color);
   };
+}
 
-  if (v_mid.x > v_mid_computed.x) {
-    std::swap(v_mid, v_mid_computed);
-  }
-
-  filled_flat_bottom(context, v_top, v_mid, v_mid_computed, color);
-  filled_flat_top(context, v_bottom, v_mid, v_mid_computed, color);
-  flat_line(context, v_mid.y, v_mid.x, v_mid_computed.x, color);
-};
 
 } // namespace draw
