@@ -8,7 +8,7 @@ Context::Context(const int width, const int height)
     color_buffer_(height * width) {
 }
 
-void Context::draw_pixel(int x, int y, uint32_t color) {
+void Context::draw_pixel(const int x, const int y, const uint32_t color) {
   if (x >= 0 && x < width_ && y >= 0 && y < height_) {
     color_buffer_[y * width_ + x] = color;
   }

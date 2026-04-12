@@ -1,9 +1,12 @@
 #pragma once
 #include "graphics.h"
+#include "../math/vec2.h"
 
 namespace draw {
 
-void rect(graphics::Context&, int x, int y, int w, int h, uint32_t color);
-void line(graphics::Context&, int x0, int y0, int x1, int y1, uint32_t color);
+void rect(graphics::Context&, const Vec2& top_left, int w, int h, uint32_t color);
+void line(graphics::Context&, const Vec2& v0, const Vec2& v1, uint32_t color);
+void triangle(graphics::Context&, const Vec2& v0, const Vec2& v1, const Vec2& v2, uint32_t color);
+void filled_triangle(graphics::Context&, const Vec2& v0, const Vec2& v1, const Vec2& v2, uint32_t color);
 
 } // namespace draw

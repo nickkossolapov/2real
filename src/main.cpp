@@ -64,11 +64,11 @@ std::vector<Triangle> transform_mesh(const Mesh& mesh, const Vec3& camera_pos) {
 }
 
 void update(const float dt, Mesh& mesh) {
-  constexpr float rotate_speed = 0.0005f;
+  constexpr float rotate_speed = 0.00005f;
 
-  mesh.rotation.x += dt * rotate_speed;
-  mesh.rotation.y += dt * rotate_speed;
-  mesh.rotation.z += dt * rotate_speed;
+  // mesh.rotation.x += dt * rotate_speed;
+  // mesh.rotation.y += dt * rotate_speed;
+  // mesh.rotation.z += dt * rotate_speed;
 }
 
 void render_scene(graphics::Context& context,
@@ -80,9 +80,8 @@ void render_scene(graphics::Context& context,
     const Vec2 b = project(t.b, camera_pos);
     const Vec2 c = project(t.c, camera_pos);
 
-    draw::line(context, a.x, a.y, b.x, b.y, 0xFF00FF00);
-    draw::line(context, b.x, b.y, c.x, c.y, 0xFF00FF00);
-    draw::line(context, c.x, c.y, a.x, a.y, 0xFF00FF00);
+    draw::filled_triangle(context, a, b, c, 0xFFFFFFFF);
+    // draw::triangle(context, a, b, c, 0xFF000000);
   }
 }
 
@@ -109,6 +108,7 @@ int main(int argc, char* argv[]) {
 
   Mesh test_mesh;
   load_obj_file("./assets/cube.obj", test_mesh);
+  test_mesh.rotation.z = 2.2;
 
   bool quit = false;
   auto renderer = graphics::Context(graphics::window::width, graphics::window::height);
