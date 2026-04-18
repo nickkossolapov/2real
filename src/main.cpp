@@ -61,12 +61,15 @@ void sort_by_depth(std::vector<render::Triangle>& triangles) {
 }
 
 std::vector<render::Triangle> transform_entity(const render::Entity& entity, const math::Vec3& camera_pos) {
-  math::Mat4 transform_mat = math::mat4::rotation(entity.transform.rotation);
+  math::Mat4 world_matrix =
+      math::mat4::translation(entity.transform.position)
+      * math::mat4::rotation(entity.transform.rotation)
+      * math::mat4::scale(entity.transform.scale);
 
-  auto make_triangle = [&entity, &transform_mat](const render::Face& face) {
-    const math::Vec3 a = transform_mat.transform_position(entity.mesh->vertices[face.a]).to_vec3();
-    const math::Vec3 b = transform_mat.transform_position(entity.mesh->vertices[face.b]).to_vec3();
-    const math::Vec3 c = transform_mat.transform_position(entity.mesh->vertices[face.c]).to_vec3();
+  auto make_triangle = [&entity, &world_matrix](const render::Face& face) {
+    const math::Vec3 a = world_matrix.transform_position(entity.mesh->vertices[face.a]).to_vec3();
+    const math::Vec3 b = world_matrix.transform_position(entity.mesh->vertices[face.b]).to_vec3();
+    const math::Vec3 c = world_matrix.transform_position(entity.mesh->vertices[face.c]).to_vec3();
 
     return render::Triangle(a, b, c);
   };
@@ -85,8 +88,10 @@ std::vector<render::Triangle> transform_entity(const render::Entity& entity, con
 
 void update(const float dt, render::Entity& entity) {
   entity.transform.rotation += dt * 0.0005f;
-  entity.transform.scale += dt * 0.0005f;
-  entity.transform.position += dt * 0.0005f;
+  entity.transform.rotation.y += dt * 0.001f;
+  entity.transform.scale += dt * 0.0001f;
+  entity.transform.position.x += dt * 0.0001f;
+  entity.transform.position.y += dt * 0.0001f;
 }
 
 void render_scene(graphics::Context& context,
@@ -136,7 +141,7 @@ int main(int argc, char* argv[]) {
   auto frame_limiter = FrameLimiter(60, enable_v_sync);
 
   while (!quit) {
-    constexpr math::Vec3 camera_pos = {0, 0, -5};
+    constexpr math::Vec3 camera_pos = {0, 0, -10};
 
     quit = process_input();
     const float dt = frame_limiter.tick();
