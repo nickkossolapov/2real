@@ -11,7 +11,7 @@ struct FaceIndices {
   int v = 0, vt = 0, vn = 0;
 };
 
-bool parse_vertex(stringstream& ss, Vec3& out) {
+bool parse_vertex(stringstream& ss, math::Vec3& out) {
   float x, y, z;
 
   if (!(ss >> x >> y >> z)) {
@@ -55,7 +55,7 @@ bool parse_face_token(const string& token, FaceIndices& indices) {
   return true;
 }
 
-bool parse_face(stringstream& ss, Face& out) {
+bool parse_face(stringstream& ss, render::Face& out) {
   string token;
   vector<FaceIndices> vertex_indices{};
 
@@ -80,7 +80,7 @@ bool parse_face(stringstream& ss, Face& out) {
 
 }
 
-bool load_obj_file(const string& path, Mesh& out) {
+bool load_obj_file(const string& path, render::Mesh& out) {
   out.faces = {};
   out.vertices = {};
 
@@ -98,11 +98,11 @@ bool load_obj_file(const string& path, Mesh& out) {
       ss >> prefix;
 
       if (prefix == "v") {
-        if (Vec3 v; parse_vertex(ss, v)) {
+        if (math::Vec3 v; parse_vertex(ss, v)) {
           out.vertices.push_back(v);
         }
       } else if (prefix == "f") {
-        if (Face f; parse_face(ss, f)) {
+        if (render::Face f; parse_face(ss, f)) {
           out.faces.push_back(f);
         }
       }

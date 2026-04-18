@@ -6,7 +6,7 @@ using namespace graphics;
 
 namespace draw {
 
-void rect(Context& context, const Vec2& top_left, const int w, const int h, const uint32_t color) {
+void rect(Context& context, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
   const int x = static_cast<int>(top_left.x);
   const int y = static_cast<int>(top_left.y);
 
@@ -18,7 +18,7 @@ void rect(Context& context, const Vec2& top_left, const int w, const int h, cons
 }
 
 // dda line drawing
-void line(Context& context, const Vec2& v0, const Vec2& v1, const uint32_t color) {
+void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
   auto [x0, y0] = v0;
   auto [x1, y1] = v1;
 
@@ -40,7 +40,11 @@ void line(Context& context, const Vec2& v0, const Vec2& v1, const uint32_t color
   }
 }
 
-void triangle(Context& context, const Vec2& v0, const Vec2& v1, const Vec2& v2, const uint32_t color) {
+void triangle(Context& context,
+              const math::Vec2& v0,
+              const math::Vec2& v1,
+              const math::Vec2& v2,
+              const uint32_t color) {
   line(context, v0, v1, color);
   line(context, v1, v2, color);
   line(context, v2, v0, color);
@@ -57,7 +61,11 @@ void flat_line(Context& context, const int y, const float x1, const float x2, co
   }
 }
 
-void filled_flat_bottom(Context& context, const Vec2& top, const Vec2& mid1, const Vec2& mid2, const uint32_t color) {
+void filled_flat_bottom(Context& context,
+                        const math::Vec2& top,
+                        const math::Vec2& mid1,
+                        const math::Vec2& mid2,
+                        const uint32_t color) {
   const float m1 = (mid1.x - top.x) / (mid1.y - top.y);
   const float m2 = (mid2.x - top.x) / (mid2.y - top.y);
 
@@ -73,7 +81,11 @@ void filled_flat_bottom(Context& context, const Vec2& top, const Vec2& mid1, con
   }
 }
 
-void filled_flat_top(Context& context, const Vec2& bottom, const Vec2& mid1, const Vec2& mid2, const uint32_t color) {
+void filled_flat_top(Context& context,
+                     const math::Vec2& bottom,
+                     const math::Vec2& mid1,
+                     const math::Vec2& mid2,
+                     const uint32_t color) {
   const float m1 = (mid1.x - bottom.x) / (mid1.y - bottom.y);
   const float m2 = (mid2.x - bottom.x) / (mid2.y - bottom.y);
 
@@ -91,8 +103,12 @@ void filled_flat_top(Context& context, const Vec2& bottom, const Vec2& mid1, con
 
 }
 
-void filled_triangle(Context& context, const Vec2& v0, const Vec2& v1, const Vec2& v2, const uint32_t color) {
-  Vec2 v_top = v0, v_mid = v1, v_bottom = v2;
+void filled_triangle(Context& context,
+                     const math::Vec2& v0,
+                     const math::Vec2& v1,
+                     const math::Vec2& v2,
+                     const uint32_t color) {
+  math::Vec2 v_top = v0, v_mid = v1, v_bottom = v2;
 
   if (v_top.y > v_mid.y) {
     std::swap(v_top, v_mid);
@@ -106,13 +122,13 @@ void filled_triangle(Context& context, const Vec2& v0, const Vec2& v1, const Vec
     std::swap(v_top, v_mid);
   }
 
-  if (std::abs(v_mid.y - v_bottom.y) < std::numeric_limits<float>::epsilon()) {
+  if (std::abs(v_mid.y - v_bottom.y) < 0.01f) {
     filled_flat_bottom(context, v_top, v_bottom, v_mid, color);
-  } else if (std::abs(v_top.y - v_mid.y) < std::numeric_limits<float>::epsilon()) {
+  } else if (std::abs(v_top.y - v_mid.y) < 0.01f) {
     filled_flat_top(context, v_bottom, v_top, v_mid, color);
   } else {
 
-    const Vec2 v_mid_computed = {
+    const math::Vec2 v_mid_computed = {
         .x = v_top.x + (v_bottom.x - v_top.x) * (v_mid.y - v_top.y) / (v_bottom.y - v_top.y),
         .y = v_mid.y
     };

@@ -1,18 +1,29 @@
 #pragma once
 #include "../math/vec3.h"
 
+#include <memory>
 #include <vector>
+
+namespace render {
 
 struct Face {
   int a = 0, b = 0, c = 0;
 };
 
-struct Triangle {
-  Vec3 a, b, c;
+struct Mesh {
+  std::vector<math::Vec3> vertices;
+  std::vector<Face> faces;
 };
 
-struct Mesh {
-  std::vector<Vec3> vertices;
-  std::vector<Face> faces;
-  Vec3 rotation;
+struct Transform {
+  math::Vec3 position;
+  math::Vec3 rotation;
+  math::Vec3 scale = {1.0f, 1.0f, 1.0f};
 };
+
+struct Entity {
+  std::shared_ptr<Mesh> mesh;
+  Transform transform;
+};
+
+} // namespace render

@@ -1,8 +1,10 @@
 #pragma once
 #include <cmath>
 
+namespace math {
+
 struct Vec2 {
-  float x, y;
+  float x = 0.0f, y = 0.0f;
 
   float length() const {
     return std::sqrt(x * x + y * y);
@@ -57,8 +59,6 @@ struct Vec2 {
   }
 };
 
-namespace vec2 {
-
 inline float dot(const Vec2& v1, const Vec2& v2) {
   return v1.x * v2.x + v1.y * v2.y;
 }
@@ -67,4 +67,4 @@ inline float cross(const Vec2& v1, const Vec2& v2) {
   return v1.x * v2.y - v1.y * v2.x; // returns the z component of the cross product
 }
 
-} // namespace vec2
+} // namespace math

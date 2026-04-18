@@ -15,8 +15,5 @@ So FOV is actually determined by screen size in that case.
 
 Known as **perspective divide**.
 
-## Handedness
-
-Will probably use a left-handed coordinate system.
 
 

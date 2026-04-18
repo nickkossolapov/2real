@@ -2,8 +2,10 @@
 
 #include <cmath>
 
+namespace math {
+
 struct Vec3 {
-  float x = 0, y = 0, z = 0;
+  float x = 0.0f, y = 0.0f, z = 0.0f;
 
   float length() const {
     return std::sqrt(x * x + y * y + z * z);
@@ -21,6 +23,14 @@ struct Vec3 {
     return *this;
   }
 
+  Vec3& operator+=(const float f) {
+    x += f;
+    y += f;
+    z += f;
+
+    return *this;
+  }
+
   Vec3 operator-(const Vec3& v) const {
     return {x - v.x, y - v.y, z - v.z};
   }
@@ -29,6 +39,14 @@ struct Vec3 {
     x -= v.x;
     y -= v.y;
     z -= v.z;
+
+    return *this;
+  }
+
+  Vec3& operator-=(const float f) {
+    x -= f;
+    y -= f;
+    z -= f;
 
     return *this;
   }
@@ -62,8 +80,6 @@ struct Vec3 {
   }
 };
 
-namespace vec3 {
-
 inline float dot(const Vec3& v1, const Vec3& v2) {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
@@ -76,32 +92,4 @@ inline Vec3 cross(const Vec3& v1, const Vec3& v2) {
   };
 }
 
-inline Vec3 rotate_x(const Vec3& v, const float angle) {
-  return {
-      v.x,
-      v.y * cos(angle) - v.z * sin(angle),
-      v.y * sin(angle) + v.z * cos(angle)
-  };
-}
-
-inline Vec3 rotate_y(const Vec3& v, const float angle) {
-  return {
-      v.x * cos(angle) - v.z * sin(angle),
-      v.y,
-      v.x * sin(angle) + v.z * cos(angle)
-  };
-}
-
-inline Vec3 rotate_z(const Vec3& v, const float angle) {
-  return {
-      v.x * cos(angle) - v.y * sin(angle),
-      v.x * sin(angle) + v.y * cos(angle),
-      v.z
-  };
-}
-
-inline Vec3 rotate(const Vec3& v, const Vec3& rot) {
-  return rotate_x(rotate_y(rotate_z(v, rot.z), rot.y), rot.x);
-}
-
-} // namespace vec3
+} // namespace math
