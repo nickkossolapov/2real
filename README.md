@@ -42,8 +42,8 @@ My journey to build a game engine that's not quite unreal
    cmake --build build
    ```
 
-3. Run
+3. Run a demo
 
    ```sh
-   ./build/Debug/2real.exe
+   ./build/Debug/basic-rendering.exe
    ```

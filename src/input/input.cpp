@@ -8,9 +8,9 @@ namespace input {
 namespace {
 
 float get_axis_tilt(const Sint16 value) {
-  constexpr static int deadZone = 3500;
+  constexpr static int dead_zone = 3500;
 
-  if (std::abs(value) < deadZone) {
+  if (std::abs(value) < dead_zone) {
     return 0;
   }
 

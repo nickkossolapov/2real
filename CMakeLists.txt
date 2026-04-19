@@ -1,19 +1,15 @@
 cmake_minimum_required(VERSION 3.21...4.3)
 project(2real)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 find_package(SDL3 CONFIG REQUIRED)
 
-add_executable(
-        2real
+add_library(
+        2real-engine STATIC
         src/engine/init.cpp
         src/engine/init.h
         src/engine/timing.h
         src/input/input.cpp
         src/input/input.h
-        src/main.cpp
         src/math/common.h
         src/math/mat4.h
         src/math/vec2.h
@@ -32,8 +28,19 @@ add_executable(
         src/scene/mesh.h
 )
 
-target_link_libraries(2real PRIVATE SDL3::SDL3)
+target_compile_features(2real-engine PUBLIC cxx_std_20)
+target_link_libraries(2real-engine PUBLIC SDL3::SDL3)
+target_include_directories(2real-engine PUBLIC src)
 
-add_custom_command(TARGET 2real POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:2real>/assets)
+function(add_demo name folder)
+    add_executable(${name} demos/${folder}/${folder}.cpp)
+    target_link_libraries(${name} PRIVATE 2real-engine)
+    if(EXISTS ${CMAKE_SOURCE_DIR}/demos/${folder}/assets)
+        add_custom_command(TARGET ${name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:${name}>/assets
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/demos/${folder}/assets $<TARGET_FILE_DIR:${name}>/assets)
+    endif()
+endfunction()
+
+add_demo(basic-rendering basic_rendering)
