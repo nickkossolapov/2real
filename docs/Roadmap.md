@@ -43,3 +43,4 @@ A lot of this will be following existing resources, so these are mostly referenc
 * https://github.com/zauonlok/renderer?tab=readme-ov-file#miscellaneous
 * Maybe try edge function
   rasterization https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage.html
+* Phong shading

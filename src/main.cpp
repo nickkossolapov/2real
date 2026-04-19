@@ -15,9 +15,9 @@
 namespace {
 
 void update(const float dt, scene::Entity& entity, const input::State& input) {
-  entity.transform.rotation.x = input.move_y * std::numbers::pi;
+  entity.transform.rotation.x = input.move_x * std::numbers::pi;
   entity.transform.rotation.y = input.look_x * std::numbers::pi;
-  entity.transform.rotation.z = input.move_x * std::numbers::pi;
+  entity.transform.rotation.z = input.move_y * std::numbers::pi;
   // entity.transform.rotation += dt * 0.0002f;
   // entity.transform.scale += dt * 0.0001f;
   entity.transform.position.x = input.look_y;
