@@ -20,17 +20,19 @@ math::Vec2 project(const scene::Camera& camera, const math::Vec4& v) {
     res.y /= res.w;
   }
 
+  constexpr float w_center = static_cast<float>(engine::window::width) / 2.0f;
+  constexpr float h_center = static_cast<float>(engine::window::height) / 2.0f;
+
   return {
-      res.x * 400.0f + static_cast<float>(engine::window::width) / 2.0f,
-      res.y * 300.0f + static_cast<float>(engine::window::height) / 2.0f
+      res.x * w_center + w_center,
+      res.y * h_center + h_center
   };
 }
 
 bool is_front_facing(const Triangle& triangle, const math::Vec3& camera_pos) {
-  const math::Vec3 normal = math::cross(triangle.b.xyz() - triangle.a.xyz(), triangle.c.xyz() - triangle.a.xyz());
   const math::Vec3 to_camera = camera_pos - triangle.a.xyz();
 
-  return math::dot(normal, to_camera) > 0;
+  return math::dot(triangle.normal, to_camera) > 0;
 }
 
 void sort_by_depth(std::vector<Triangle>& triangles) {
@@ -80,13 +82,9 @@ uint32_t apply_light_intensity(const uint32_t color, const float intensity) {
 }
 
 float calculate_flat_lighting(const Triangle& triangle, const scene::DirectionalLight& light) {
-  const auto a_b = triangle.b.xyz() - triangle.a.xyz();
-  const auto a_c = triangle.c.xyz() - triangle.a.xyz();
-  const auto normal = math::cross(a_b, a_c).normalized();
-
   constexpr float ambient = 0.1f;
 
-  return ambient + (1.0f - ambient) * std::max(0.0f, -math::dot(normal, light.direction));
+  return ambient + (1.0f - ambient) * std::max(0.0f, -math::dot(triangle.normal, light.direction));
 };
 
 }
@@ -104,7 +102,7 @@ void render_entity(graphics::Context& context,
     const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);
 
     draw::filled_triangle(context, a, b, c, color);
-    draw::triangle(context, a, b, c, 0xFF000000);
+    // draw::triangle(context, a, b, c, 0xFF000000);
   }
 }
 

@@ -26,4 +26,4 @@ struct Entity {
   Transform transform;
 };
 
-} // namespace render
+} // namespace scene

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cmath>
 
 namespace math {
@@ -81,7 +80,7 @@ struct Vec3 {
     return {x * s, y * s, z * s};
   }
 
-  Vec3 operator*=(const float s) {
+  Vec3& operator*=(const float s) {
     x *= s;
     y *= s;
     z *= s;
@@ -93,7 +92,7 @@ struct Vec3 {
     return {x / s, y / s, z / s};
   }
 
-  Vec3 operator/=(const float s) {
+  Vec3& operator/=(const float s) {
     x /= s;
     y /= s;
     z /= s;

@@ -8,6 +8,7 @@ find_package(SDL3 CONFIG REQUIRED)
 
 add_executable(
         2real
+        src/engine/init.cpp
         src/engine/init.h
         src/engine/timing.h
         src/input/input.cpp

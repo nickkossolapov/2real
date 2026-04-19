@@ -36,7 +36,7 @@ struct Vec2 {
     return {x * s, y * s};
   }
 
-  Vec2 operator*=(const float s) {
+  Vec2& operator*=(const float s) {
     x *= s;
     y *= s;
 
@@ -47,7 +47,7 @@ struct Vec2 {
     return {x / s, y / s};
   }
 
-  Vec2 operator/=(const float s) {
+  Vec2& operator/=(const float s) {
     x /= s;
     y /= s;
 

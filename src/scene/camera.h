@@ -12,4 +12,4 @@ struct Camera {
   math::Mat4 projection;
 };
 
-} // namespace render
+} // namespace scene

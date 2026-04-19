@@ -1,5 +1,4 @@
 #pragma once
-#include "vec2.h"
 #include "vec3.h"
 #include "vec4.h"
 
@@ -86,8 +85,8 @@ inline Mat4 translation(const Vec3& translation_vec) {
 
 inline Mat4 rotation_x(const float a) {
   Mat4 m;
-  const float s = sin(a);
-  const float c = cos(a);
+  const float s = std::sin(a);
+  const float c = std::cos(a);
 
   m.m[1][1] = c;
   m.m[1][2] = s;
@@ -99,8 +98,8 @@ inline Mat4 rotation_x(const float a) {
 
 inline Mat4 rotation_y(const float a) {
   Mat4 m;
-  const float s = sin(a);
-  const float c = cos(a);
+  const float s = std::sin(a);
+  const float c = std::cos(a);
 
   m.m[0][0] = c;
   m.m[0][2] = -s;
@@ -112,8 +111,8 @@ inline Mat4 rotation_y(const float a) {
 
 inline Mat4 rotation_z(const float a) {
   Mat4 m;
-  const float s = sin(a);
-  const float c = cos(a);
+  const float s = std::sin(a);
+  const float c = std::cos(a);
 
   m.m[0][0] = c;
   m.m[0][1] = s;
@@ -128,17 +127,17 @@ inline Mat4 rotation(const Vec3& v) {
 }
 
 inline Mat4 perspective(const float fov, const float aspect_ratio, const float z_near, const float z_far) {
-  Mat4 m{{{0.0}}};
+  Mat4 m{{{0.0f}}};
 
   const float a = aspect_ratio;
-  const float f = 1.0 / tan(fov / 2.0);
+  const float f = 1.0f / std::tan(fov / 2.0f);
   const float l = z_far / (z_far - z_near);
 
   m.m[0][0] = a * f;
   m.m[1][1] = f;
   m.m[2][2] = l;
   m.m[2][3] = -z_near * l;
-  m.m[3][2] = 1.0;
+  m.m[3][2] = 1.0f;
 
   return m;
 }

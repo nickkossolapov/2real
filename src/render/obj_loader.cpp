@@ -3,7 +3,6 @@
 #include <fstream>
 #include <sstream>
 
-using namespace std;
 
 namespace {
 
@@ -11,7 +10,7 @@ struct FaceIndices {
   int v = 0, vt = 0, vn = 0;
 };
 
-bool parse_vertex(stringstream& ss, math::Vec3& out) {
+bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
   float x, y, z;
 
   if (!(ss >> x >> y >> z)) {
@@ -25,15 +24,15 @@ bool parse_vertex(stringstream& ss, math::Vec3& out) {
   return true;
 };
 
-bool parse_face_token(const string& token, FaceIndices& indices) {
-  stringstream ss(token);
-  string segment;
+bool parse_face_token(const std::string& token, FaceIndices& indices) {
+  std::stringstream ss(token);
+  std::string segment;
   int part = 0;
 
   while (getline(ss, segment, '/')) {
     if (!segment.empty()) {
       try {
-        const int val = stoi(segment);
+        const int val = std::stoi(segment);
 
         if (part == 0) {
           indices.v = val;
@@ -55,9 +54,9 @@ bool parse_face_token(const string& token, FaceIndices& indices) {
   return true;
 }
 
-bool parse_face(stringstream& ss, scene::Face& out) {
-  string token;
-  vector<FaceIndices> vertex_indices{};
+bool parse_face(std::stringstream& ss, scene::Face& out) {
+  std::string token;
+  std::vector<FaceIndices> vertex_indices{};
 
   while (ss >> token) {
     if (FaceIndices i; parse_face_token(token, i)) {
@@ -80,20 +79,20 @@ bool parse_face(stringstream& ss, scene::Face& out) {
 
 }
 
-bool load_obj_file(const string& path, scene::Mesh& out) {
+bool load_obj_file(const std::string& path, scene::Mesh& out) {
   out.faces = {};
   out.vertices = {};
 
-  if (ifstream obj_file(path); obj_file.is_open()) {
-    string line;
+  if (std::ifstream obj_file(path); obj_file.is_open()) {
+    std::string line;
 
     while (getline(obj_file, line)) {
       if (line.length() <= 1) {
         continue;
       }
 
-      string prefix;
-      stringstream ss(line);
+      std::string prefix;
+      std::stringstream ss(line);
 
       ss >> prefix;
 

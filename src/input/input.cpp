@@ -1,5 +1,6 @@
 #include "input.h"
 
+#include <cmath>
 #include <SDL3/SDL.h>
 
 namespace input {
@@ -9,7 +10,7 @@ namespace {
 float get_axis_tilt(const Sint16 value) {
   constexpr static int deadZone = 3500;
 
-  if (abs(value) < deadZone) {
+  if (std::abs(value) < deadZone) {
     return 0;
   }
 

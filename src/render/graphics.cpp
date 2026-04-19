@@ -18,7 +18,7 @@ void Context::draw_pixel(const int x, const int y, const uint32_t color) {
 void Context::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_RenderClear(&renderer);
 
-  SDL_UpdateTexture(&display_texture, nullptr, color_buffer_.data(), engine::window::width * sizeof(uint32_t));
+  SDL_UpdateTexture(&display_texture, nullptr, color_buffer_.data(), width_ * sizeof(uint32_t));
   SDL_RenderTexture(&renderer, &display_texture, nullptr, nullptr);
 
   std::fill(color_buffer_.begin(), color_buffer_.end(), 0x0);
