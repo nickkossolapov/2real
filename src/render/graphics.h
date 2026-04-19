@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../engine/init.h"
-
 #include <vector>
 #include <SDL3/SDL.h>
 

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 
+namespace render {
 
 namespace {
 
@@ -112,3 +113,5 @@ bool load_obj_file(const std::string& path, scene::Mesh& out) {
 
   return false;
 }
+
+} // namespace render

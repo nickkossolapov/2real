@@ -12,7 +12,7 @@ namespace render::pipeline {
 
 namespace {
 
-math::Vec2 project(const scene::Camera& camera, const math::Vec4& v) {
+math::Vec2 project(const Viewport& viewport, const scene::Camera& camera, const math::Vec4& v) {
   math::Vec4 res = camera.projection * v;
 
   if (res.w != 0.0f) {
@@ -20,8 +20,8 @@ math::Vec2 project(const scene::Camera& camera, const math::Vec4& v) {
     res.y /= res.w;
   }
 
-  constexpr float w_center = static_cast<float>(engine::window::width) / 2.0f;
-  constexpr float h_center = static_cast<float>(engine::window::height) / 2.0f;
+  const float w_center = static_cast<float>(viewport.width) / 2.0f;
+  const float h_center = static_cast<float>(viewport.height) / 2.0f;
 
   return {
       res.x * w_center + w_center,
@@ -90,13 +90,14 @@ float calculate_flat_lighting(const Triangle& triangle, const scene::Directional
 }
 
 void render_entity(graphics::Context& context,
+                   const Viewport& viewport,
                    const scene::Entity& entity,
                    const scene::Camera& camera,
                    const scene::DirectionalLight& light) {
   for (const auto triangles = transform_entity(entity, camera.position); const Triangle& t : triangles) {
-    const math::Vec2 a = project(camera, t.a);
-    const math::Vec2 b = project(camera, t.b);
-    const math::Vec2 c = project(camera, t.c);
+    const math::Vec2 a = project(viewport, camera, t.a);
+    const math::Vec2 b = project(viewport, camera, t.b);
+    const math::Vec2 c = project(viewport, camera, t.c);
 
     const float light_intensity = calculate_flat_lighting(t, light);
     const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);

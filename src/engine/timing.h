@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL_timer.h>
 
+namespace engine {
+
 class FrameLimiter {
 
 public:
@@ -11,22 +13,23 @@ public:
 
   float tick() {
     const uint64_t now = SDL_GetTicks();
-    const float dt = static_cast<float>(now - last_time_);
-
-    last_time_ = now;
 
     if (!v_sync_) {
-      cap();
+      cap(now);
     }
+
+    const uint64_t after = SDL_GetTicks();
+    const float dt = static_cast<float>(after - last_time_);
+    last_time_ = after;
 
     return dt;
   }
 
 private:
-  void cap() const {
+  void cap(const uint64_t frame_start) const {
     const float target_ms = 1000.0f / target_fps_;
 
-    if (const float elapsed = static_cast<float>(SDL_GetTicks() - last_time_); elapsed < target_ms) {
+    if (const float elapsed = static_cast<float>(SDL_GetTicks() - frame_start); elapsed < target_ms) {
       SDL_Delay(static_cast<uint32_t>(target_ms - elapsed));
     }
   }
@@ -35,3 +38,5 @@ private:
   bool v_sync_;
   Uint64 last_time_ = SDL_GetTicks();
 };
+
+} // namespace engine

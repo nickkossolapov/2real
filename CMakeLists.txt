@@ -23,6 +23,7 @@ add_library(
         src/render/pipeline.cpp
         src/render/pipeline.h
         src/render/triangle.h
+        src/render/viewport.h
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h

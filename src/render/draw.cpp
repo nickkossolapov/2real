@@ -2,11 +2,10 @@
 
 #include <cmath>
 
-using namespace graphics;
 
 namespace draw {
 
-void rect(Context& context, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
+void rect(graphics::Context& context, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
   const int x = static_cast<int>(top_left.x);
   const int y = static_cast<int>(top_left.y);
 
@@ -18,14 +17,21 @@ void rect(Context& context, const math::Vec2& top_left, const int w, const int h
 }
 
 // dda line drawing
-void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
+void line(graphics::Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
   auto [x0, y0] = v0;
   auto [x1, y1] = v1;
 
   const float delta_x = x1 - x0;
   const float delta_y = y1 - y0;
 
-  const int side_length = static_cast<int>(std::abs(delta_x) >= abs(delta_y) ? abs(delta_x) : abs(delta_y));
+  const int side_length = static_cast<int>(std::abs(delta_x) >= std::abs(delta_y)
+                                             ? std::abs(delta_x)
+                                             : std::abs(delta_y));
+
+  if (side_length == 0) {
+    context.draw_pixel(std::lround(x0), std::lround(y0), color);
+    return;
+  }
 
   const float x_inc = delta_x / side_length;
   const float y_inc = delta_y / side_length;
@@ -40,7 +46,7 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   }
 }
 
-void triangle(Context& context,
+void triangle(graphics::Context& context,
               const math::Vec2& v0,
               const math::Vec2& v1,
               const math::Vec2& v2,
@@ -52,7 +58,7 @@ void triangle(Context& context,
 
 namespace {
 
-void flat_line(Context& context, const int y, const float x1, const float x2, const uint32_t color) {
+void flat_line(graphics::Context& context, const int y, const float x1, const float x2, const uint32_t color) {
   const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
   const int right = static_cast<int>(std::floor(std::max(x1, x2)));
 
@@ -61,7 +67,7 @@ void flat_line(Context& context, const int y, const float x1, const float x2, co
   }
 }
 
-void filled_flat_bottom(Context& context,
+void filled_flat_bottom(graphics::Context& context,
                         const math::Vec2& top,
                         const math::Vec2& mid1,
                         const math::Vec2& mid2,
@@ -81,7 +87,7 @@ void filled_flat_bottom(Context& context,
   }
 }
 
-void filled_flat_top(Context& context,
+void filled_flat_top(graphics::Context& context,
                      const math::Vec2& bottom,
                      const math::Vec2& mid1,
                      const math::Vec2& mid2,
@@ -103,7 +109,7 @@ void filled_flat_top(Context& context,
 
 }
 
-void filled_triangle(Context& context,
+void filled_triangle(graphics::Context& context,
                      const math::Vec2& v0,
                      const math::Vec2& v1,
                      const math::Vec2& v2,
@@ -137,6 +143,5 @@ void filled_triangle(Context& context,
     filled_flat_top(context, v_bottom, v_mid, v_mid_computed, color);
   };
 }
-
 
 } // namespace draw

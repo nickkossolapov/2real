@@ -15,7 +15,9 @@ float get_axis_tilt(const Sint16 value) {
     return 0;
   }
 
-  return static_cast<float>(value - dead_zone) / end;
+  const float v = value > 0 ? static_cast<float>(value - dead_zone) : static_cast<float>(value + dead_zone);
+
+  return v / end;
 }
 
 }

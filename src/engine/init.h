@@ -5,8 +5,8 @@ namespace engine {
 
 namespace window {
 
-constexpr int width = 800;
-constexpr int height = 600;
+constexpr int width = 1600;
+constexpr int height = 1200;
 
 } // namespace window
 

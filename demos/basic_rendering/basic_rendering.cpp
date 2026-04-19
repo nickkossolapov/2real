@@ -1,3 +1,4 @@
+#include "engine/init.h"
 #include "engine/timing.h"
 #include "input/input.h"
 #include "math/common.h"
@@ -6,11 +7,19 @@
 #include "render/graphics.h"
 #include "render/obj_loader.h"
 #include "render/pipeline.h"
+#include "render/viewport.h"
 #include "scene/camera.h"
 #include "scene/mesh.h"
 
 #include <algorithm>
 #include <SDL3/SDL.h>
+
+namespace window {
+
+constexpr int width = 1600;
+constexpr int height = 1200;
+
+} // namespace window
 
 namespace {
 
@@ -40,8 +49,7 @@ int main(int argc, char* argv[]) {
   SDL_Gamepad* controller = nullptr;
   input::State input_state;
 
-  constexpr
-      bool enable_v_sync = true;
+  constexpr bool enable_v_sync = true;
 
   if (auto init_res = engine::init_sdl(window, sdl_renderer, display_texture, controller, enable_v_sync);
     init_res != engine::InitError::None) {
@@ -50,11 +58,11 @@ int main(int argc, char* argv[]) {
   }
 
   const auto test_mesh = std::make_shared<scene::Mesh>();
-  load_obj_file("./basic_rendering/assets/f22.obj", *test_mesh);
+  render::load_obj_file("./basic_rendering/assets/f22.obj", *test_mesh);
 
   constexpr float fov = math::deg_to_rad(60.0f);
-  constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
-  const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1, 100.0)};
+  constexpr float aspect = static_cast<float>(window::height) / static_cast<float>(window::width);
+  const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
   scene::Entity test_entity = {
       .mesh = test_mesh
@@ -65,8 +73,9 @@ int main(int argc, char* argv[]) {
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
 
   bool quit = false;
-  auto renderer = graphics::Context(engine::window::width, engine::window::height);
-  auto frame_limiter = FrameLimiter(60, enable_v_sync);
+  constexpr render::Viewport viewport = {window::width, window::height};
+  auto renderer = graphics::Context(viewport.width, viewport.height);
+  auto frame_limiter = engine::FrameLimiter(60, enable_v_sync);
 
   while (!quit) {
     const float dt = frame_limiter.tick();
@@ -74,7 +83,7 @@ int main(int argc, char* argv[]) {
     quit = input::process_input(dt, input_state);
     update(dt, test_entity, input_state);
 
-    render::pipeline::render_entity(renderer, test_entity, camera, light);
+    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light);
     renderer.present(*sdl_renderer, *display_texture);
   }
 
