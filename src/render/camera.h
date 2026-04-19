@@ -1,9 +1,15 @@
 #pragma once
 
+#include "../math/mat4.h"
 #include "../math/vec3.h"
 
+namespace render {
+
 struct Camera {
-  Vec3 position;
-  Vec3 rotation;
-  float fov_angle;
+  math::Vec3 position;
+  math::Vec3 rotation;
+
+  math::Mat4 projection;
 };
+
+} // namespace render

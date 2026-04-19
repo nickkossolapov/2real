@@ -1,10 +1,10 @@
 #pragma once
-#include "../math/vec3.h"
+#include "../math/vec4.h"
 
 namespace render {
 
 struct Triangle {
-  math::Vec3 a, b, c;
+  math::Vec4 a, b, c;
 };
 
 } // namespace render

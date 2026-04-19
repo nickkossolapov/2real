@@ -21,7 +21,10 @@ add_executable(2real
         src/render/obj_loader.cpp
         src/math/mat4.h
         src/math/vec4.h
-        src/render/triangle.h)
+        src/render/triangle.h
+        src/math/common.h
+        src/render/pipeline.h
+        src/render/pipeline.cpp)
 target_link_libraries(2real PRIVATE SDL3::SDL3)
 
 add_custom_command(TARGET 2real POST_BUILD
