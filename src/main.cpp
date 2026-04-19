@@ -1,15 +1,12 @@
 #include "engine/timing.h"
 #include "math/common.h"
 #include "math/mat4.h"
-#include "math/vec2.h"
 #include "math/vec3.h"
-#include "render/camera.h"
-#include "render/draw.h"
 #include "render/graphics.h"
-#include "render/mesh.h"
 #include "render/obj_loader.h"
 #include "render/pipeline.h"
-#include "render/triangle.h"
+#include "scene/camera.h"
+#include "scene/mesh.h"
 
 #include <algorithm>
 #include <SDL3/SDL.h>
@@ -34,8 +31,8 @@ bool process_input() {
   return false;
 }
 
-void update(const float dt, render::Entity& entity) {
-  // entity.transform.rotation += dt * 0.0005f;
+void update(const float dt, scene::Entity& entity) {
+  entity.transform.rotation += dt * 0.0005f;
   // entity.transform.scale += dt * 0.0001f;
   // entity.transform.position.x += dt * 0.0001f;
   // entity.transform.position.y += dt * 0.0001f;
@@ -62,14 +59,14 @@ int main(int argc, char* argv[]) {
     return static_cast<int>(init_res);
   }
 
-  const auto test_mesh = std::make_shared<render::Mesh>();
+  const auto test_mesh = std::make_shared<scene::Mesh>();
   load_obj_file("./assets/f22.obj", *test_mesh);
 
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(graphics::window::height) / static_cast<float>(graphics::window::width);
-  const render::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1, 100.0)};
+  const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1, 100.0)};
 
-  render::Entity test_entity = {
+  scene::Entity test_entity = {
       .mesh = test_mesh
   };
 

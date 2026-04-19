@@ -3,7 +3,7 @@
 #include "../math/mat4.h"
 #include "../math/vec3.h"
 
-namespace render {
+namespace scene {
 
 struct Camera {
   math::Vec3 position;

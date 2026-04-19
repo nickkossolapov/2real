@@ -11,12 +11,12 @@ add_executable(2real
         src/render/graphics.cpp
         src/math/vec2.h
         src/math/vec3.h
-        src/render/camera.h
+        src/scene/camera.h
         src/input.h
         src/engine/timing.h
         src/render/draw.h
         src/render/draw.cpp
-        src/render/mesh.h
+        src/scene/mesh.h
         src/render/obj_loader.h
         src/render/obj_loader.cpp
         src/math/mat4.h

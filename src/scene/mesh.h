@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-namespace render {
+namespace scene {
 
 struct Face {
   int a = 0, b = 0, c = 0;

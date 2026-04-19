@@ -11,7 +11,7 @@ namespace render::pipeline {
 
 namespace {
 
-math::Vec2 project(const Camera& camera, const math::Vec4& v) {
+math::Vec2 project(const scene::Camera& camera, const math::Vec4& v) {
   math::Vec4 res = camera.projection * v;
 
   if (res.w != 0.0f) {
@@ -43,13 +43,13 @@ void sort_by_depth(std::vector<Triangle>& triangles) {
   std::ranges::sort(triangles.begin(), triangles.end(), comparer);
 }
 
-std::vector<Triangle> transform_entity(const Entity& entity, const math::Vec3& camera_pos) {
+std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::Vec3& camera_pos) {
   math::Mat4 world_matrix =
       math::mat4::translation(entity.transform.position)
       * math::mat4::rotation(entity.transform.rotation)
       * math::mat4::scale(entity.transform.scale);
 
-  auto make_triangle = [&entity, &world_matrix](const Face& face) {
+  auto make_triangle = [&entity, &world_matrix](const scene::Face& face) {
     const math::Vec4 a = world_matrix.transform_position(entity.mesh->vertices[face.a]);
     const math::Vec4 b = world_matrix.transform_position(entity.mesh->vertices[face.b]);
     const math::Vec4 c = world_matrix.transform_position(entity.mesh->vertices[face.c]);
@@ -72,10 +72,7 @@ std::vector<Triangle> transform_entity(const Entity& entity, const math::Vec3& c
 
 }
 
-void render_entity(graphics::Context& context,
-                   const Entity& entity,
-                   const Camera& camera) {
-
+void render_entity(graphics::Context& context, const scene::Entity& entity, const scene::Camera& camera) {
   for (const auto triangles = transform_entity(entity, camera.position); const Triangle& t : triangles) {
     const math::Vec2 a = project(camera, t.a);
     const math::Vec2 b = project(camera, t.b);

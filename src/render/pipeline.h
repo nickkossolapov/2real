@@ -1,10 +1,10 @@
 #pragma once
-#include "camera.h"
 #include "graphics.h"
-#include "mesh.h"
+#include "../scene/camera.h"
+#include "../scene/mesh.h"
 
 namespace render::pipeline {
 
-void render_entity(graphics::Context& context, const Entity& entity, const Camera& camera);
+void render_entity(graphics::Context& context, const scene::Entity& entity, const scene::Camera& camera);
 
 } // namespace render::pipeline

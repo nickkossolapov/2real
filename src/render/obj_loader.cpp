@@ -55,7 +55,7 @@ bool parse_face_token(const string& token, FaceIndices& indices) {
   return true;
 }
 
-bool parse_face(stringstream& ss, render::Face& out) {
+bool parse_face(stringstream& ss, scene::Face& out) {
   string token;
   vector<FaceIndices> vertex_indices{};
 
@@ -80,7 +80,7 @@ bool parse_face(stringstream& ss, render::Face& out) {
 
 }
 
-bool load_obj_file(const string& path, render::Mesh& out) {
+bool load_obj_file(const string& path, scene::Mesh& out) {
   out.faces = {};
   out.vertices = {};
 
@@ -102,7 +102,7 @@ bool load_obj_file(const string& path, render::Mesh& out) {
           out.vertices.push_back(v);
         }
       } else if (prefix == "f") {
-        if (render::Face f; parse_face(ss, f)) {
+        if (scene::Face f; parse_face(ss, f)) {
           out.faces.push_back(f);
         }
       }
