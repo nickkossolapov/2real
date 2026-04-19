@@ -2,6 +2,7 @@
 
 #include "draw.h"
 #include "triangle.h"
+#include "../scene/light.h"
 
 #include <algorithm>
 #include <ranges>
@@ -20,8 +21,8 @@ math::Vec2 project(const scene::Camera& camera, const math::Vec4& v) {
   }
 
   return {
-      res.x * 400.0f + static_cast<float>(graphics::window::width) / 2.0f,
-      res.y * 300.0f + static_cast<float>(graphics::window::height) / 2.0f
+      res.x * 400.0f + static_cast<float>(engine::window::width) / 2.0f,
+      res.y * 300.0f + static_cast<float>(engine::window::height) / 2.0f
   };
 }
 
@@ -69,16 +70,40 @@ std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::
   return materialized;
 }
 
+uint32_t apply_light_intensity(const uint32_t color, const float intensity) {
+  const uint32_t a = color & 0xFF000000;
+  const uint32_t r = static_cast<uint32_t>((color >> 16 & 0xFF) * intensity);
+  const uint32_t g = static_cast<uint32_t>((color >> 8 & 0xFF) * intensity);
+  const uint32_t b = static_cast<uint32_t>((color & 0xFF) * intensity);
+
+  return a | (r << 16) | (g << 8) | b;
+}
+
+float calculate_flat_lighting(const Triangle& triangle, const scene::DirectionalLight& light) {
+  const auto a_b = triangle.b.xyz() - triangle.a.xyz();
+  const auto a_c = triangle.c.xyz() - triangle.a.xyz();
+  const auto normal = math::cross(a_b, a_c).normalized();
+
+  constexpr float ambient = 0.1f;
+
+  return ambient + (1.0f - ambient) * std::max(0.0f, -math::dot(normal, light.direction));
+};
 
 }
 
-void render_entity(graphics::Context& context, const scene::Entity& entity, const scene::Camera& camera) {
+void render_entity(graphics::Context& context,
+                   const scene::Entity& entity,
+                   const scene::Camera& camera,
+                   const scene::DirectionalLight& light) {
   for (const auto triangles = transform_entity(entity, camera.position); const Triangle& t : triangles) {
     const math::Vec2 a = project(camera, t.a);
     const math::Vec2 b = project(camera, t.b);
     const math::Vec2 c = project(camera, t.c);
 
-    draw::filled_triangle(context, a, b, c, 0xFFFFFFFF);
+    const float light_intensity = calculate_flat_lighting(t, light);
+    const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);
+
+    draw::filled_triangle(context, a, b, c, color);
     draw::triangle(context, a, b, c, 0xFF000000);
   }
 }
