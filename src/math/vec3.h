@@ -11,7 +11,7 @@ struct Vec3 {
   }
 
   void normalize() {
-    constexpr static float tol = 1e-6f;
+    constexpr float tol = 1e-6f;
 
     if (const float m = length(); m > tol) {
       x /= m;

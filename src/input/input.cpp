@@ -8,13 +8,14 @@ namespace input {
 namespace {
 
 float get_axis_tilt(const Sint16 value) {
-  constexpr static int dead_zone = 3500;
+  constexpr int dead_zone = 3500;
+  constexpr float end = static_cast<float>(SDL_MAX_SINT16 - dead_zone);
 
   if (std::abs(value) < dead_zone) {
     return 0;
   }
 
-  return static_cast<float>(value) / static_cast<float>(SDL_MAX_SINT16);
+  return static_cast<float>(value - dead_zone) / end;
 }
 
 }

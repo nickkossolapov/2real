@@ -24,8 +24,6 @@ void update(const float dt, scene::Entity& entity, const input::State& input) {
   // entity.transform.position.y += dt * 0.0001f;
 }
 
-} // namespace
-
 void destroy(SDL_Window* window, SDL_Renderer* sdl_renderer, SDL_Gamepad* controller) {
   SDL_DestroyRenderer(sdl_renderer);
   SDL_DestroyWindow(window);
@@ -33,12 +31,14 @@ void destroy(SDL_Window* window, SDL_Renderer* sdl_renderer, SDL_Gamepad* contro
   SDL_Quit();
 }
 
+}
+
 int main(int argc, char* argv[]) {
   SDL_Window* window = nullptr;
   SDL_Renderer* sdl_renderer = nullptr;
   SDL_Texture* display_texture = nullptr;
   SDL_Gamepad* controller = nullptr;
-  input::State inputState;
+  input::State input_state;
 
   constexpr
       bool enable_v_sync = true;
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) {
   while (!quit) {
     const float dt = frame_limiter.tick();
 
-    quit = input::process_input(dt, inputState);
-    update(dt, test_entity, inputState);
+    quit = input::process_input(dt, input_state);
+    update(dt, test_entity, input_state);
 
     render::pipeline::render_entity(renderer, test_entity, camera, light);
     renderer.present(*sdl_renderer, *display_texture);
