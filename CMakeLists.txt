@@ -37,9 +37,9 @@ function(add_demo name folder)
     target_link_libraries(${name} PRIVATE 2real-engine)
     if(EXISTS ${CMAKE_SOURCE_DIR}/demos/${folder}/assets)
         add_custom_command(TARGET ${name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:${name}>/assets
+                COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:${name}>/${folder}/assets
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/demos/${folder}/assets $<TARGET_FILE_DIR:${name}>/assets)
+                ${CMAKE_SOURCE_DIR}/demos/${folder}/assets $<TARGET_FILE_DIR:${name}>/${folder}/assets)
     endif()
 endfunction()
 

@@ -45,5 +45,6 @@ My journey to build a game engine that's not quite unreal
 3. Run a demo
 
    ```sh
-   ./build/Debug/basic-rendering.exe
+   cd build/Debug
+   ./basic-rendering.exe
    ```

@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
   }
 
   const auto test_mesh = std::make_shared<scene::Mesh>();
-  load_obj_file("./assets/f22.obj", *test_mesh);
+  load_obj_file("./basic_rendering/assets/f22.obj", *test_mesh);
 
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
