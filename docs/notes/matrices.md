@@ -22,3 +22,59 @@ The transformation matrix is a linear transformation in 4D though. Like sheering
 And then we can then ignore the 3D component, to project it back down to 2D.
 
 See [transformation matrix](https://en.wikipedia.org/wiki/Transformation_matrix).
+
+# Column Major vs Row Major
+
+There are two conventions for how vectors and matrices interact. They produce the same results but affect the code and how matrices are laid out in memory. 
+
+The two forms are transpositions of each other.
+
+2real uses column vectors, and most maths and physics resources use column vectors.
+
+## Column Vectors (Column Major)
+
+Translation lives in the **last column**:
+
+$$
+\begin{bmatrix}
+m_{00} & m_{01} & m_{02} & t_x \\
+m_{10} & m_{11} & m_{12} & t_y \\
+m_{20} & m_{21} & m_{22} & t_z \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix} x \\ y \\ z \\ w \end{bmatrix}
+$$
+
+- Code: `M * v`
+- Post-multiplication
+- Transforms compose left-to-right: `T * R * S * v` (scale first, then rotate, then translate)
+- Used by: **OpenGL, GLM, Unity, 2real**
+
+## Row Vectors (Row Major)
+
+Translation lives in the **last row**:
+
+$$
+\begin{bmatrix} x & y & z & w \end{bmatrix}
+\begin{bmatrix}
+m_{00} & m_{10} & m_{20} & 0 \\
+m_{01} & m_{11} & m_{21} & 0 \\
+m_{02} & m_{12} & m_{22} & 0 \\
+t_x & t_y & t_z & 1
+\end{bmatrix}
+$$
+
+- Code: `v * M`
+- Pre-muplication
+- Transforms compose right-to-left: `v * S * R * T` (scale first, then rotate, then translate)
+- Used by: **DirectX, Unreal Engine, HLSL**
+
+## Transpose of a Product
+
+The two conventions are related by the transpose identity:
+
+$$(M \cdot N)^T = N^T \cdot M^T$$
+
+This extends to any chain:
+
+$$(A \cdot B \cdot C)^T = C^T \cdot B^T \cdot A^T$$
