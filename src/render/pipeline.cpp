@@ -25,7 +25,7 @@ math::Vec2 project(const Viewport& viewport, const scene::Camera& camera, const 
 
   return {
       res.x * w_center + w_center,
-      res.y * h_center + h_center
+      -res.y * h_center + h_center
   };
 }
 

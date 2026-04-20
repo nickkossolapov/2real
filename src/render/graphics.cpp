@@ -10,8 +10,7 @@ Context::Context(const int width, const int height)
 
 void Context::draw_pixel(const int x, const int y, const uint32_t color) {
   if (x >= 0 && x < width_ && y >= 0 && y < height_) {
-    const int y_inv = height_ - 1 - y; // SDL is y-down, but engine is y-up. Invert y to match engine.
-    color_buffer_[y_inv * width_ + x] = color;
+    color_buffer_[y * width_ + x] = color;
   }
 }
 
