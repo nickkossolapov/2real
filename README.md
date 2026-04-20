@@ -14,15 +14,10 @@ My journey to build a game engine that's not quite unreal
     - MSVC Build Tools for x64/x86
     - Windows 11 SDK
     - C++ CMake tools for Windows
-    - vcpkg package manager
 
-2. Set the `VCPKG_ROOT` environment variable to where the tool is installed. Restart your terminal after setting this.
+2. Set up [vcpkg](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-powershell) (with `VCPKG_ROOT` environment variable).
 
-   ```powershell
-   [Environment]::SetEnvironmentVariable("VCPKG_ROOT", "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\vcpkg", "User")
-   ```
-
-3. Start the VS PowerShell
+3. Start the VS PowerShell, or start it up. To start it for the default VS installation location:
 
    ```sh
    ./dev.ps1

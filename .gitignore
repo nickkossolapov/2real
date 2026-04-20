@@ -21,6 +21,9 @@ build/
 *.o
 *.obj
 
+# 3D model assets (override *.obj ignore)
+!demos/**/assets/*.obj
+
 # Precompiled Headers
 *.gch
 *.pch

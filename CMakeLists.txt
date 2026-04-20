@@ -33,10 +33,10 @@ target_compile_features(2real-engine PUBLIC cxx_std_20)
 target_link_libraries(2real-engine PUBLIC SDL3::SDL3)
 target_include_directories(2real-engine PUBLIC src)
 
-function(add_demo name folder)
+function(add_demo name folder include_assets)
     add_executable(${name} demos/${folder}/${folder}.cpp)
     target_link_libraries(${name} PRIVATE 2real-engine)
-    if(EXISTS ${CMAKE_SOURCE_DIR}/demos/${folder}/assets)
+    if(include_assets)
         add_custom_command(TARGET ${name} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:${name}>/${folder}/assets
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -44,4 +44,4 @@ function(add_demo name folder)
     endif()
 endfunction()
 
-add_demo(basic-rendering basic_rendering)
+add_demo(basic-rendering basic_rendering TRUE)
