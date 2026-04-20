@@ -5,8 +5,8 @@ find_package(SDL3 CONFIG REQUIRED)
 
 add_library(
         2real-engine STATIC
-        src/engine/init.cpp
-        src/engine/init.h
+        src/engine/sdl.cpp
+        src/engine/sdl.h
         src/engine/timing.h
         src/input/input.cpp
         src/input/input.h
