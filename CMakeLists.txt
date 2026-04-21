@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.21...4.3)
-project(2real)
+project(2real LANGUAGES CXX)
+
+# Standardize output dirs between Linux, macOS, and Windows
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 find_package(SDL3 CONFIG REQUIRED)
 
@@ -17,6 +22,7 @@ add_library(
         src/math/vec4.h
         src/render/draw.cpp
         src/render/draw.h
+        src/render/graphics.h
         src/render/graphics.cpp
         src/render/obj_loader.cpp
         src/render/obj_loader.h
@@ -36,11 +42,18 @@ target_include_directories(2real-engine PUBLIC src)
 function(add_demo name folder include_assets)
     add_executable(${name} demos/${folder}/${folder}.cpp)
     target_link_libraries(${name} PRIVATE 2real-engine)
+
+    set_target_properties(${name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}")
+
     if(include_assets)
         add_custom_command(TARGET ${name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:${name}>/${folder}/assets
+                COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:${name}>/assets"
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/demos/${folder}/assets $<TARGET_FILE_DIR:${name}>/${folder}/assets)
+                "${CMAKE_SOURCE_DIR}/demos/${folder}/assets"
+                "$<TARGET_FILE_DIR:${name}>/assets"
+                COMMENT "Freshly syncing assets for ${name}"
+                VERBATIM)
     endif()
 endfunction()
 

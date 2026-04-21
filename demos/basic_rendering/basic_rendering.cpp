@@ -16,10 +16,10 @@
 namespace {
 
 void update(const float dt, scene::Entity& entity, const input::State& input) {
-  entity.transform.rotation.x = input.move_x * std::numbers::pi;
-  entity.transform.rotation.y = -input.look_x * std::numbers::pi;
-  entity.transform.rotation.z = -input.move_y * std::numbers::pi;
-  // entity.transform.rotation += dt * 0.0002f;
+  // entity.transform.rotation.x = input.move_x * std::numbers::pi;
+  // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
+  // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
+  entity.transform.rotation += dt * 0.0002f;
   // entity.transform.scale += dt * 0.0001f;
   entity.transform.position.x = input.look_y;
   // entity.transform.position.y += dt * 0.0001f;
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   }
 
   const auto test_mesh = std::make_shared<scene::Mesh>();
-  render::load_obj_file("./basic_rendering/assets/f22.obj", *test_mesh);
+  render::load_obj_file("./assets/f22.obj", *test_mesh);
 
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
