@@ -1,12 +1,11 @@
-#include "graphics.h"
+#include "context.h"
 
-namespace graphics {
+namespace render {
 
 Context::Context(const int width, const int height)
-  : width_(width),
-    height_(height),
-    color_buffer_(height * width) {
-}
+    : width_(width),
+      height_(height),
+      color_buffer_(height * width) {}
 
 void Context::draw_pixel(const int x, const int y, const uint32_t color) {
   if (x >= 0 && x < width_ && y >= 0 && y < height_) {
@@ -24,4 +23,4 @@ void Context::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_RenderPresent(&renderer);
 }
 
-} // namespace graphics
+} // namespace render

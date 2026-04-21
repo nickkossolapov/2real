@@ -22,8 +22,8 @@ add_library(
         src/math/vec4.h
         src/render/draw.cpp
         src/render/draw.h
-        src/render/graphics.h
-        src/render/graphics.cpp
+        src/render/context.h
+        src/render/context.cpp
         src/render/obj_loader.cpp
         src/render/obj_loader.h
         src/render/pipeline.cpp
@@ -33,20 +33,20 @@ add_library(
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h
+        src/render/texture.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
 target_link_libraries(2real-engine PUBLIC SDL3::SDL3)
 target_include_directories(2real-engine PUBLIC src)
 
-function(add_demo name folder include_assets)
-    add_executable(${name} demos/${folder}/${folder}.cpp)
+function(setup_demo name folder include_assets)
     target_link_libraries(${name} PRIVATE 2real-engine)
 
     set_target_properties(${name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}")
 
-    if(include_assets)
+    if (include_assets)
         add_custom_command(TARGET ${name} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:${name}>/assets"
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -54,7 +54,12 @@ function(add_demo name folder include_assets)
                 "$<TARGET_FILE_DIR:${name}>/assets"
                 COMMENT "Freshly syncing assets for ${name}"
                 VERBATIM)
-    endif()
+    endif ()
 endfunction()
 
-add_demo(basic-rendering basic_rendering TRUE)
+add_executable(basic-rendering
+        demos/basic_rendering/basic_rendering.cpp
+        demos/basic_rendering/cube_texture.h
+)
+
+setup_demo(basic-rendering basic_rendering TRUE)

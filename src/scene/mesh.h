@@ -1,5 +1,6 @@
 #pragma once
 #include "../math/vec3.h"
+#include "math/vec2.h"
 
 #include <memory>
 #include <vector>
@@ -7,11 +8,13 @@
 namespace scene {
 
 struct Face {
-  int a = 0, b = 0, c = 0;
+  int a = -1, b = -1, c = -1;
+  int a_uv = -1, b_uv = -1, c_uv = -1;
 };
 
 struct Mesh {
   std::vector<math::Vec3> vertices;
+  std::vector<math::Vec2> texture_uvs;
   std::vector<Face> faces;
 };
 

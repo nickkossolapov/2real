@@ -8,7 +8,7 @@ namespace render {
 namespace {
 
 struct FaceIndices {
-  int v = 0, vt = 0, vn = 0;
+  int v = -1, vt = -1, vn = -1;
 };
 
 bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
@@ -23,7 +23,19 @@ bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
   out.z = z;
 
   return true;
-};
+}
+
+bool parse_vertex_texture(std::stringstream& ss, math::Vec2& out) {
+  float u, v;
+
+  if (!(ss >> u >> v)) {
+    return false;
+  }
+  out.x = u;
+  out.y = v;
+
+  return true;
+}
 
 bool parse_face_token(const std::string& token, FaceIndices& indices) {
   std::stringstream ss(token);
@@ -72,13 +84,16 @@ bool parse_face(std::stringstream& ss, scene::Face& out) {
   }
 
   out.a = vertex_indices[0].v - 1;
+  out.a_uv = vertex_indices[0].vt - 1;
   out.b = vertex_indices[1].v - 1;
+  out.b_uv = vertex_indices[1].vt - 1;
   out.c = vertex_indices[2].v - 1;
+  out.c_uv = vertex_indices[2].vt - 1;
 
   return true;
 };
 
-}
+} // namespace
 
 bool load_obj_file(const std::string& path, scene::Mesh& out) {
   out.faces = {};
@@ -100,6 +115,10 @@ bool load_obj_file(const std::string& path, scene::Mesh& out) {
       if (prefix == "v") {
         if (math::Vec3 v; parse_vertex(ss, v)) {
           out.vertices.push_back(v);
+        }
+      } else if (prefix == "vt") {
+        if (math::Vec2 uv; parse_vertex_texture(ss, uv)) {
+          out.texture_uvs.push_back(uv);
         }
       } else if (prefix == "f") {
         if (scene::Face f; parse_face(ss, f)) {

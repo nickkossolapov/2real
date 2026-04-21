@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
 #include <SDL3/SDL.h>
+#include <vector>
 
-namespace graphics {
+namespace render {
 
 class Context {
 public:
@@ -16,4 +16,4 @@ private:
   std::vector<uint32_t> color_buffer_;
 };
 
-} // namespace graphics
+} // namespace render
