@@ -17,13 +17,13 @@ void flat_line(Context& context, const int y, const float x1, const float x2, co
 }
 
 void filled_flat_bottom(Context& context, const std::array<math::Vec2, 3>& vertices, const uint32_t color) {
-  auto [top, mid1, mid2] = vertices;
+  auto [top, mid, bottom] = vertices;
 
-  const float m1 = (mid1.x - top.x) / (mid1.y - top.y);
-  const float m2 = (mid2.x - top.x) / (mid2.y - top.y);
+  const float m1 = (mid.x - top.x) / (mid.y - top.y);
+  const float m2 = (bottom.x - top.x) / (bottom.y - top.y);
 
   const int y_start = static_cast<int>(std::ceil(top.y));
-  const int y_end = static_cast<int>(std::floor(mid1.y));
+  const int y_end = static_cast<int>(std::floor(mid.y));
 
   for (int y = y_start; y <= y_end; y++) {
     const float dy = static_cast<float>(y) - top.y;
@@ -35,12 +35,12 @@ void filled_flat_bottom(Context& context, const std::array<math::Vec2, 3>& verti
 }
 
 void filled_flat_top(Context& context, const std::array<math::Vec2, 3>& vertices, const uint32_t color) {
-  auto [bottom, mid1, mid2] = vertices;
+  auto [top, mid, bottom] = vertices;
 
-  const float m1 = (mid1.x - bottom.x) / (mid1.y - bottom.y);
-  const float m2 = (mid2.x - bottom.x) / (mid2.y - bottom.y);
+  const float m1 = (mid.x - bottom.x) / (mid.y - bottom.y);
+  const float m2 = (top.x - bottom.x) / (top.y - bottom.y);
 
-  const int y_start = static_cast<int>(std::ceil(mid1.y));
+  const int y_start = static_cast<int>(std::ceil(mid.y));
   const int y_end = static_cast<int>(std::floor(bottom.y));
 
   for (int y = y_start; y <= y_end; y++) {
@@ -49,6 +49,82 @@ void filled_flat_top(Context& context, const std::array<math::Vec2, 3>& vertices
     const float x_end = bottom.x + m2 * dy;
 
     flat_line(context, y, x_start, x_end, color);
+  }
+}
+
+std::array<float, 3> get_barycentric_weights(const std::array<TexturedVertex, 3>& v, const math::Vec2& p) {
+  std::array<float, 3> weights;
+
+  const float total_area = math::cross(v[1].pos - v[0].pos, v[2].pos - v[0].pos);
+
+  for (int i = 0; i < 3; i++) {
+    weights[i] = cross(v[(i + 1) % 3].pos - p, v[(i + 2) % 3].pos - p) / total_area;
+  }
+
+  return weights;
+}
+
+uint32_t get_texel(const std::array<float, 3>& weights, const std::array<math::Vec2, 3>& uvs, const Texture& texture) {
+  const float u = weights[0] * uvs[0].x + weights[1] * uvs[1].x + weights[2] * uvs[2].x;
+  const float v = weights[0] * uvs[0].y + weights[1] * uvs[1].y + weights[2] * uvs[2].y;
+
+  const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
+  const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
+
+  return texture.data[tex_y * texture.width + tex_x];
+}
+
+void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>& tv, const Texture& texture) {
+  auto [top, mid, bottom] = tv;
+
+  const float m1 = (mid.pos.x - top.pos.x) / (mid.pos.y - top.pos.y);
+  const float m2 = (bottom.pos.x - top.pos.x) / (bottom.pos.y - top.pos.y);
+
+  const int y_start = static_cast<int>(std::ceil(top.pos.y));
+  const int y_end = static_cast<int>(std::floor(mid.pos.y));
+
+  for (int y = y_start; y <= y_end; y++) {
+    const float dy = static_cast<float>(y) - top.pos.y;
+    const float x1 = top.pos.x + m1 * dy;
+    const float x2 = top.pos.x + m2 * dy;
+
+    const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
+    const int right = static_cast<int>(std::floor(std::max(x1, x2)));
+
+    for (int x = left; x <= right; x++) {
+      math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
+      const auto weights = get_barycentric_weights(tv, p);
+      const uint32_t texel = get_texel(weights, {tv[0].uv, tv[1].uv, tv[2].uv}, texture);
+
+      context.draw_pixel(x, y, texel);
+    }
+  }
+}
+
+void textured_flat_top(Context& context, const std::array<TexturedVertex, 3>& tv, const Texture& texture) {
+  auto [top, mid, bottom] = tv;
+
+  const float m1 = (mid.pos.x - bottom.pos.x) / (mid.pos.y - bottom.pos.y);
+  const float m2 = (top.pos.x - bottom.pos.x) / (top.pos.y - bottom.pos.y);
+
+  const int y_start = static_cast<int>(std::ceil(mid.pos.y));
+  const int y_end = static_cast<int>(std::floor(bottom.pos.y));
+
+  for (int y = y_start; y <= y_end; y++) {
+    const float dy = static_cast<float>(y) - bottom.pos.y;
+    const float x1 = bottom.pos.x + m1 * dy;
+    const float x2 = bottom.pos.x + m2 * dy;
+
+    const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
+    const int right = static_cast<int>(std::floor(std::max(x1, x2)));
+
+    for (int x = left; x <= right; x++) {
+      math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
+      const auto weights = get_barycentric_weights(tv, p);
+      const uint32_t texel = get_texel(weights, {tv[0].uv, tv[1].uv, tv[2].uv}, texture);
+
+      context.draw_pixel(x, y, texel);
+    }
   }
 }
 
@@ -103,11 +179,23 @@ void filled_triangle(Context& context, std::array<math::Vec2, 3> v, const uint32
     filled_flat_top(context, {v[2], v[0], v[1]}, color);
   } else {
 
-    const math::Vec2 v_mid = {.x = v[0].x + (v[2].x - v[0].x) * (v[1].y - v[0].y) / (v[2].y - v[0].y), .y = v[1].y};
-
-    filled_flat_bottom(context, {v[0], v[1], v_mid}, color);
-    filled_flat_top(context, {v[2], v[1], v_mid}, color);
+    filled_flat_bottom(context, v, color);
+    filled_flat_top(context, v, color);
   }
 }
+
+void textured_triangle(Context& context, std::array<TexturedVertex, 3> tv, const Texture& texture) {
+  std::ranges::sort(tv, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
+
+  if (std::abs(tv[1].pos.y - tv[2].pos.y) < 0.01f) {
+    textured_flat_bottom(context, tv, texture);
+  } else if (std::abs(tv[0].pos.y - tv[1].pos.y) < 0.01f) {
+    textured_flat_top(context, tv, texture);
+  } else {
+
+    textured_flat_bottom(context, tv, texture);
+    textured_flat_top(context, tv, texture);
+  }
+};
 
 } // namespace render::draw

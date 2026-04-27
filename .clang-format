@@ -6,6 +6,7 @@ AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 PackConstructorInitializers: Never
+AlwaysBreakAfterReturnType: None
 BinPackParameters: false
 BinPackArguments: false
 FixNamespaceComments: true

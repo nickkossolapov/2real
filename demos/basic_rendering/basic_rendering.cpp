@@ -1,3 +1,4 @@
+#include "cube_texture.h"
 #include "engine/sdl.h"
 #include "engine/timing.h"
 #include "input/input.h"
@@ -17,9 +18,9 @@ void update(const float dt, scene::Entity& entity, const input::State& input) {
   // entity.transform.rotation.x = input.move_x * std::numbers::pi;
   // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
   // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
-  entity.transform.rotation += dt * 0.0005f;
+  entity.transform.rotation += dt * 0.0003f;
   // entity.transform.scale += dt * 0.0001f;
-  entity.transform.position.x = input.look_y;
+  // entity.transform.position.x = input.look_y;
   // entity.transform.position.y += dt * 0.0001f;
 }
 
@@ -43,6 +44,9 @@ int main(int argc, char* argv[]) {
   scene::Entity test_entity = {.mesh = test_mesh};
 
   test_entity.transform.position.z = 5;
+
+  const auto test_texture = std::make_shared<render::Texture>(cube_texture);
+  test_entity.texture = test_texture;
 
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
 

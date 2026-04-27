@@ -52,6 +52,14 @@ std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::
     const math::Vec4 b = world_matrix.transform_position(entity.mesh->vertices[face.b]);
     const math::Vec4 c = world_matrix.transform_position(entity.mesh->vertices[face.c]);
 
+    if (face.a_uv != -1 && face.b_uv != -1 && face.c_uv != -1) {
+      const std::array uvs = {entity.mesh->texture_uvs[face.a_uv],
+                              entity.mesh->texture_uvs[face.b_uv],
+                              entity.mesh->texture_uvs[face.c_uv]};
+
+      return Triangle({a, b, c}, uvs);
+    }
+
     return Triangle({a, b, c});
   };
   auto check_back_face_culling = [&camera_pos](const Triangle& t) { return is_front_facing(t, camera_pos); };
@@ -94,8 +102,12 @@ void render_entity(Context& context,
     const float light_intensity = calculate_flat_lighting(t, light);
     const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);
 
-    draw::filled_triangle(context, {a, b, c}, color);
-    // draw::triangle(context, a, b, c, 0xFF000000);
+    if (entity.texture != nullptr) {
+      const std::array<draw::TexturedVertex, 3> textured_vertices = {{{a, t.uvs[0]}, {b, t.uvs[1]}, {c, t.uvs[2]}}};
+      draw::textured_triangle(context, textured_vertices, *entity.texture);
+    } else {
+      draw::filled_triangle(context, {a, b, c}, color);
+    }
   }
 }
 

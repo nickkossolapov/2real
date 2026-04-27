@@ -1,6 +1,7 @@
 #pragma once
-#include "../math/vec3.h"
 #include "math/vec2.h"
+#include "math/vec3.h"
+#include "render/texture.h"
 
 #include <memory>
 #include <vector>
@@ -27,6 +28,7 @@ struct Transform {
 struct Entity {
   std::shared_ptr<Mesh> mesh;
   Transform transform;
+  std::shared_ptr<render::Texture> texture;
 };
 
 } // namespace scene
