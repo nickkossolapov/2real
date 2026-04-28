@@ -31,6 +31,8 @@ Install the [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visua
 - Windows 11 SDK
 - C++ CMake tools for Windows
 
+Be sure to run the commands below in the Developer PowerShell for VS.
+
 ### Building
 
 1. **Configure**
