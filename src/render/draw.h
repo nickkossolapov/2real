@@ -10,6 +10,8 @@ namespace render::draw {
 struct TexturedVertex {
   math::Vec2 pos;
   math::Vec2 uv;
+  float z;
+  float w;
 };
 
 void rect(Context&, const math::Vec2& top_left, int w, int h, uint32_t color);

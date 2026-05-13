@@ -12,7 +12,13 @@ namespace render::pipeline {
 
 namespace {
 
-math::Vec2 project(const Viewport& viewport, const scene::Camera& camera, const math::Vec4& v) {
+struct ProjectedVertex {
+  math::Vec2 pos;
+  float z;
+  float w;
+};
+
+ProjectedVertex project(const Viewport& viewport, const scene::Camera& camera, const math::Vec4& v) {
   math::Vec4 res = camera.projection * v;
 
   if (res.w != 0.0f) {
@@ -23,7 +29,7 @@ math::Vec2 project(const Viewport& viewport, const scene::Camera& camera, const 
   const float w_center = static_cast<float>(viewport.width) / 2.0f;
   const float h_center = static_cast<float>(viewport.height) / 2.0f;
 
-  return {res.x * w_center + w_center, -res.y * h_center + h_center};
+  return {.pos = {res.x * w_center + w_center, -res.y * h_center + h_center}, .z = res.z, .w = res.w};
 }
 
 bool is_front_facing(const Triangle& triangle, const math::Vec3& camera_pos) {
@@ -95,18 +101,24 @@ void render_entity(Context& context,
                    const scene::Camera& camera,
                    const scene::DirectionalLight& light) {
   for (const auto triangles = transform_entity(entity, camera.position); const Triangle& t : triangles) {
-    const math::Vec2 a = project(viewport, camera, t.vertices[0]);
-    const math::Vec2 b = project(viewport, camera, t.vertices[1]);
-    const math::Vec2 c = project(viewport, camera, t.vertices[2]);
+    const auto a = project(viewport, camera, t.vertices[0]);
+    const auto b = project(viewport, camera, t.vertices[1]);
+    const auto c = project(viewport, camera, t.vertices[2]);
 
     const float light_intensity = calculate_flat_lighting(t, light);
     const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);
 
     if (entity.texture != nullptr) {
-      const std::array<draw::TexturedVertex, 3> textured_vertices = {{{a, t.uvs[0]}, {b, t.uvs[1]}, {c, t.uvs[2]}}};
+      const std::array<draw::TexturedVertex, 3> textured_vertices = {
+        {
+          {.pos = a.pos, .uv = t.uvs[0], .z = a.z, .w = a.w},
+          {.pos = b.pos, .uv = t.uvs[1], .z = b.z, .w = b.w},
+          {.pos = c.pos, .uv = t.uvs[2], .z = c.z, .w = c.w}
+        }};
+
       draw::textured_triangle(context, textured_vertices, *entity.texture);
     } else {
-      draw::filled_triangle(context, {a, b, c}, color);
+      draw::filled_triangle(context, {a.pos, b.pos, c.pos}, color);
     }
   }
 }

@@ -64,9 +64,20 @@ std::array<float, 3> get_barycentric_weights(const std::array<TexturedVertex, 3>
   return weights;
 }
 
-uint32_t get_texel(const std::array<float, 3>& weights, const std::array<math::Vec2, 3>& uvs, const Texture& texture) {
-  const float u = weights[0] * uvs[0].x + weights[1] * uvs[1].x + weights[2] * uvs[2].x;
-  const float v = weights[0] * uvs[0].y + weights[1] * uvs[1].y + weights[2] * uvs[2].y;
+uint32_t get_texel(const std::array<float, 3>& weights, const std::array<TexturedVertex, 3>& tvs, const Texture& texture) {
+  float u = 0;
+  float v = 0;
+  float inv_w = 0;
+
+  // TODO check for division by 0
+  for (int i = 0; i <= 2; i++) {
+    u += weights[i] * tvs[i].uv.x / tvs[i].w;
+    v += weights[i] * tvs[i].uv.y / tvs[i].w;
+    inv_w += weights[i] / tvs[i].w;
+  }
+
+  u /= inv_w;
+  v /= inv_w;
 
   const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
   const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
@@ -94,7 +105,7 @@ void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>&
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
       const auto weights = get_barycentric_weights(tv, p);
-      const uint32_t texel = get_texel(weights, {tv[0].uv, tv[1].uv, tv[2].uv}, texture);
+      const uint32_t texel = get_texel(weights, tv, texture);
 
       context.draw_pixel(x, y, texel);
     }
@@ -121,7 +132,7 @@ void textured_flat_top(Context& context, const std::array<TexturedVertex, 3>& tv
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
       const auto weights = get_barycentric_weights(tv, p);
-      const uint32_t texel = get_texel(weights, {tv[0].uv, tv[1].uv, tv[2].uv}, texture);
+      const uint32_t texel = get_texel(weights, tv, texture);
 
       context.draw_pixel(x, y, texel);
     }
