@@ -8,6 +8,7 @@
 #include "render/context.h"
 #include "render/obj_loader.h"
 #include "render/pipeline.h"
+#include "render/texture_loader.h"
 #include "render/viewport.h"
 #include "scene/camera.h"
 #include "scene/mesh.h"
@@ -18,7 +19,8 @@ void update(const float dt, scene::Entity& entity, const input::State& input) {
   // entity.transform.rotation.x = input.move_x * std::numbers::pi;
   // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
   // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
-  entity.transform.rotation += dt * 0.0003f;
+  // entity.transform.rotation += dt * 0.0003f;
+  entity.transform.rotation.y += dt * 0.0003f;
   // entity.transform.scale += dt * 0.0001f;
   // entity.transform.position.x = input.look_y;
   // entity.transform.position.y += dt * 0.0001f;
@@ -45,8 +47,13 @@ int main(int argc, char* argv[]) {
 
   test_entity.transform.position.z = 5;
 
-  const auto test_texture = std::make_shared<render::Texture>(cube_texture);
-  test_entity.texture = test_texture;
+  const auto test_texture = render::load_texture_file("./assets/cube.png");
+
+  if (!test_texture.has_value()) {
+    return -1;
+  }
+
+  test_entity.texture = std::make_shared<render::Texture>(test_texture.value());
 
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
 

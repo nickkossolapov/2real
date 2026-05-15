@@ -20,25 +20,27 @@ add_library(
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
+        src/render/context.cpp
+        src/render/context.h
         src/render/draw.cpp
         src/render/draw.h
-        src/render/context.h
-        src/render/context.cpp
         src/render/obj_loader.cpp
         src/render/obj_loader.h
         src/render/pipeline.cpp
         src/render/pipeline.h
+        src/render/texture.h
+        src/render/texture_loader.cpp
+        src/render/texture_loader.h
         src/render/triangle.h
         src/render/viewport.h
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h
-        src/render/texture.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
 target_link_libraries(2real-engine PUBLIC SDL3::SDL3)
-target_include_directories(2real-engine PUBLIC src)
+target_include_directories(2real-engine PUBLIC src third_party)
 
 function(setup_demo name folder include_assets)
     target_link_libraries(${name} PRIVATE 2real-engine)
