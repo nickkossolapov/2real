@@ -18,8 +18,8 @@ void update(const float dt, scene::Entity& entity, const input::State& input) {
   // entity.transform.rotation.x = input.move_x * std::numbers::pi;
   // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
   // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
-  // entity.transform.rotation += dt * 0.0003f;
-  entity.transform.rotation.y += dt * 0.0003f;
+  entity.transform.rotation += dt * 0.0003f;
+  // entity.transform.rotation.y += dt * 0.0003f;
   // entity.transform.scale += dt * 0.0001f;
   // entity.transform.position.x = input.look_y;
   // entity.transform.position.y += dt * 0.0001f;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
   const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
-  auto cube_mesh = render::load_obj_file("./assets/crab.obj");
+  auto cube_mesh = render::load_obj_file("./assets/f117.obj");
 
   if (!cube_mesh.has_value()) {
     SDL_Log("Failed to load mesh");
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
   test_entity.transform.position.z = 5;
 
-  const auto test_texture = render::load_texture_file("./assets/crab.png");
+  const auto test_texture = render::load_texture_file("./assets/f117.png");
 
   if (!test_texture.has_value()) {
     SDL_Log("Failed to load texture");

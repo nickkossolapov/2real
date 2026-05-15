@@ -38,17 +38,6 @@ bool is_front_facing(const Triangle& triangle, const math::Vec3& camera_pos) {
   return math::dot(triangle.normal, to_camera) > 0;
 }
 
-void sort_by_depth(std::vector<Triangle>& triangles) {
-  auto comparer = [](const Triangle& l, const Triangle& r) {
-    const float z_l = l.vertices[0].z + l.vertices[1].z + l.vertices[2].z;
-    const float z_r = r.vertices[0].z + r.vertices[1].z + r.vertices[2].z;
-
-    return z_l > z_r;
-  };
-
-  std::ranges::sort(triangles.begin(), triangles.end(), comparer);
-}
-
 std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::Vec3& camera_pos) {
   math::Mat4 world_matrix = math::mat4::translation(entity.transform.position) *
                             math::mat4::rotation(entity.transform.rotation) * math::mat4::scale(entity.transform.scale);
@@ -68,14 +57,12 @@ std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::
 
     return Triangle({a, b, c});
   };
+
   auto check_back_face_culling = [&camera_pos](const Triangle& t) { return is_front_facing(t, camera_pos); };
 
   auto view = entity.mesh->faces | std::views::transform(make_triangle) | std::views::filter(check_back_face_culling);
 
-  auto materialized = std::vector(view.begin(), view.end());
-  sort_by_depth(materialized);
-
-  return materialized;
+  return std::vector(view.begin(), view.end());
 }
 
 uint32_t apply_light_intensity(const uint32_t color, const float intensity) {
@@ -110,11 +97,9 @@ void render_entity(Context& context,
 
     if (entity.texture != nullptr) {
       const std::array<draw::TexturedVertex, 3> textured_vertices = {
-        {
-          {.pos = a.pos, .uv = t.uvs[0], .z = a.z, .w = a.w},
-          {.pos = b.pos, .uv = t.uvs[1], .z = b.z, .w = b.w},
-          {.pos = c.pos, .uv = t.uvs[2], .z = c.z, .w = c.w}
-        }};
+          {{.pos = a.pos, .uv = t.uvs[0], .z = a.z, .w = a.w},
+           {.pos = b.pos, .uv = t.uvs[1], .z = b.z, .w = b.w},
+           {.pos = c.pos, .uv = t.uvs[2], .z = c.z, .w = c.w}}};
 
       draw::textured_triangle(context, textured_vertices, *entity.texture);
     } else {

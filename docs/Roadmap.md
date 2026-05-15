@@ -31,6 +31,7 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 - [ ] Memory management - maybe an arena allocator?
 - [ ] Threading - see if I can move the physics solver to its own CPU thread
 - [ ] Profiling - build a frame timer to break down physics vs rendering etc.
+- [ ] Reversed Z-Buffer instead of 1/W-Buffer
 
 # Possible resources
 

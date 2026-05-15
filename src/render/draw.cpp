@@ -7,6 +7,11 @@ namespace render::draw {
 
 namespace {
 
+struct TexelResult {
+  uint32_t color;
+  float inv_w;
+};
+
 void flat_line(Context& context, const int y, const float x1, const float x2, const uint32_t color) {
   const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
   const int right = static_cast<int>(std::floor(std::max(x1, x2)));
@@ -64,10 +69,11 @@ std::array<float, 3> get_barycentric_weights(const std::array<TexturedVertex, 3>
   return weights;
 }
 
-uint32_t get_texel(const std::array<float, 3>& weights, const std::array<TexturedVertex, 3>& tvs, const Texture& texture) {
-  float u = 0;
-  float v = 0;
-  float inv_w = 0;
+TexelResult
+get_texel(const std::array<float, 3>& weights, const std::array<TexturedVertex, 3>& tvs, const Texture& texture) {
+  float u = 0.0f;
+  float v = 0.0f;
+  float inv_w = 0.0f;
 
   // TODO check for division by 0
   for (int i = 0; i <= 2; i++) {
@@ -82,7 +88,7 @@ uint32_t get_texel(const std::array<float, 3>& weights, const std::array<Texture
   const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
   const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
 
-  return texture.data[tex_y * texture.width + tex_x];
+  return {texture.data[tex_y * texture.width + tex_x], inv_w};
 }
 
 void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>& tv, const Texture& texture) {
@@ -105,9 +111,9 @@ void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>&
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
       const auto weights = get_barycentric_weights(tv, p);
-      const uint32_t texel = get_texel(weights, tv, texture);
+      const auto [texel, depth] = get_texel(weights, tv, texture);
 
-      context.draw_pixel(x, y, texel);
+      context.draw_pixel(x, y, depth, texel);
     }
   }
 }
@@ -132,9 +138,9 @@ void textured_flat_top(Context& context, const std::array<TexturedVertex, 3>& tv
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
       const auto weights = get_barycentric_weights(tv, p);
-      const uint32_t texel = get_texel(weights, tv, texture);
+      const auto [texel, depth] = get_texel(weights, tv, texture);
 
-      context.draw_pixel(x, y, texel);
+      context.draw_pixel(x, y, depth, texel);
     }
   }
 }
