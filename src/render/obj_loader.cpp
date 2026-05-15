@@ -25,14 +25,19 @@ bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
   return true;
 }
 
+// Used to tile textures, so when vt is not in range [0, 1)
+float wrap(const float v) {
+  return v - std::floor(v);
+}
+
 bool parse_vertex_texture(std::stringstream& ss, math::Vec2& out) {
   float u, v;
 
   if (!(ss >> u >> v)) {
     return false;
   }
-  out.x = u;
-  out.y = 1.0f - v; // obj files have UV origin in bottom-left, while textures are top-left
+  out.x = wrap(u);
+  out.y = wrap(1.0f - v); // obj files have UV origin in bottom-left, while textures are top-left
 
   return true;
 }

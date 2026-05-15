@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
   const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
-  auto cube_mesh = render::load_obj_file("./assets/cube.obj");
+  auto cube_mesh = render::load_obj_file("./assets/crab.obj");
 
   if (!cube_mesh.has_value()) {
     SDL_Log("Failed to load mesh");
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
   test_entity.transform.position.z = 5;
 
-  const auto test_texture = render::load_texture_file("./assets/cube.png");
+  const auto test_texture = render::load_texture_file("./assets/crab.png");
 
   if (!test_texture.has_value()) {
     SDL_Log("Failed to load texture");
