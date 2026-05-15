@@ -32,7 +32,7 @@ bool parse_vertex_texture(std::stringstream& ss, math::Vec2& out) {
     return false;
   }
   out.x = u;
-  out.y = v;
+  out.y = 1.0f - v; // obj files have UV origin in bottom-left, while textures are top-left
 
   return true;
 }
@@ -95,11 +95,10 @@ bool parse_face(std::stringstream& ss, scene::Face& out) {
 
 } // namespace
 
-bool load_obj_file(const std::string& path, scene::Mesh& out) {
-  out.faces = {};
-  out.vertices = {};
+std::optional<scene::Mesh> load_obj_file(const std::string& path) {
 
   if (std::ifstream obj_file(path); obj_file.is_open()) {
+    scene::Mesh m;
     std::string line;
 
     while (getline(obj_file, line)) {
@@ -114,23 +113,23 @@ bool load_obj_file(const std::string& path, scene::Mesh& out) {
 
       if (prefix == "v") {
         if (math::Vec3 v; parse_vertex(ss, v)) {
-          out.vertices.push_back(v);
+          m.vertices.push_back(v);
         }
       } else if (prefix == "vt") {
         if (math::Vec2 uv; parse_vertex_texture(ss, uv)) {
-          out.texture_uvs.push_back(uv);
+          m.texture_uvs.push_back(uv);
         }
       } else if (prefix == "f") {
         if (scene::Face f; parse_face(ss, f)) {
-          out.faces.push_back(f);
+          m.faces.push_back(f);
         }
       }
     }
 
-    return true;
+    return m;
   }
 
-  return false;
+  return {};
 }
 
 } // namespace render

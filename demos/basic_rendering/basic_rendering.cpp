@@ -1,4 +1,3 @@
-#include "cube_texture.h"
 #include "engine/sdl.h"
 #include "engine/timing.h"
 #include "input/input.h"
@@ -36,20 +35,29 @@ int main(int argc, char* argv[]) {
     return static_cast<int>(err);
   }
 
-  const auto test_mesh = std::make_shared<scene::Mesh>();
-  render::load_obj_file("./assets/cube.obj", *test_mesh);
-
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
   const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
-  scene::Entity test_entity = {.mesh = test_mesh};
+  auto cube_mesh = render::load_obj_file("./assets/cube.obj");
+
+  if (!cube_mesh.has_value()) {
+    SDL_Log("Failed to load mesh");
+
+    return -1;
+  }
+
+  auto cube_mesh_ptr = std::make_shared<scene::Mesh>(std::move(*cube_mesh));
+
+  scene::Entity test_entity = {.mesh = cube_mesh_ptr};
 
   test_entity.transform.position.z = 5;
 
   const auto test_texture = render::load_texture_file("./assets/cube.png");
 
   if (!test_texture.has_value()) {
+    SDL_Log("Failed to load texture");
+
     return -1;
   }
 
