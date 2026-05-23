@@ -7,57 +7,13 @@ namespace render::draw {
 
 namespace {
 
-struct TexelResult {
+struct PixelResult {
   uint32_t color;
   float inv_w;
 };
 
-void flat_line(Context& context, const int y, const float x1, const float x2, const uint32_t color) {
-  const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
-  const int right = static_cast<int>(std::floor(std::max(x1, x2)));
-
-  for (int x = left; x <= right; x++) {
-    context.draw_pixel(x, y, color);
-  }
-}
-
-void filled_flat_bottom(Context& context, const std::array<math::Vec2, 3>& vertices, const uint32_t color) {
-  auto [top, mid, bottom] = vertices;
-
-  const float m1 = (mid.x - top.x) / (mid.y - top.y);
-  const float m2 = (bottom.x - top.x) / (bottom.y - top.y);
-
-  const int y_start = static_cast<int>(std::ceil(top.y));
-  const int y_end = static_cast<int>(std::floor(mid.y));
-
-  for (int y = y_start; y <= y_end; y++) {
-    const float dy = static_cast<float>(y) - top.y;
-    const float x_start = top.x + m1 * dy;
-    const float x_end = top.x + m2 * dy;
-
-    flat_line(context, y, x_start, x_end, color);
-  }
-}
-
-void filled_flat_top(Context& context, const std::array<math::Vec2, 3>& vertices, const uint32_t color) {
-  auto [top, mid, bottom] = vertices;
-
-  const float m1 = (mid.x - bottom.x) / (mid.y - bottom.y);
-  const float m2 = (top.x - bottom.x) / (top.y - bottom.y);
-
-  const int y_start = static_cast<int>(std::ceil(mid.y));
-  const int y_end = static_cast<int>(std::floor(bottom.y));
-
-  for (int y = y_start; y <= y_end; y++) {
-    const float dy = static_cast<float>(y) - bottom.y;
-    const float x_start = bottom.x + m1 * dy;
-    const float x_end = bottom.x + m2 * dy;
-
-    flat_line(context, y, x_start, x_end, color);
-  }
-}
-
-std::array<float, 3> get_barycentric_weights(const std::array<TexturedVertex, 3>& v, const math::Vec2& p) {
+template <typename Vertex>
+std::array<float, 3> get_barycentric_weights(const std::array<Vertex, 3>& v, const math::Vec2& p) {
   std::array<float, 3> weights;
 
   const float total_area = math::cross(v[1].pos - v[0].pos, v[2].pos - v[0].pos);
@@ -69,14 +25,15 @@ std::array<float, 3> get_barycentric_weights(const std::array<TexturedVertex, 3>
   return weights;
 }
 
-TexelResult
-get_texel(const std::array<float, 3>& weights, const std::array<TexturedVertex, 3>& tvs, const Texture& texture) {
+PixelResult get_texel(const std::array<float, 3>& weights,
+                      const std::array<TexturedVertex, 3>& tvs,
+                      const Texture& texture) {
   float u = 0.0f;
   float v = 0.0f;
   float inv_w = 0.0f;
 
   // TODO check for division by 0
-  for (int i = 0; i <= 2; i++) {
+  for (int i = 0; i < 3; i++) {
     u += weights[i] * tvs[i].uv.x / tvs[i].w;
     v += weights[i] * tvs[i].uv.y / tvs[i].w;
     inv_w += weights[i] / tvs[i].w;
@@ -91,8 +48,20 @@ get_texel(const std::array<float, 3>& weights, const std::array<TexturedVertex, 
   return {texture.data[tex_y * texture.width + tex_x], inv_w};
 }
 
-void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>& tv, const Texture& texture) {
-  auto [top, mid, bottom] = tv;
+float get_depth(const std::array<float, 3>& weights, const std::array<FlatVertex, 3>& vs) {
+  float inv_w = 0.0f;
+
+  // TODO check for division by 0
+  for (int i = 0; i < 3; i++) {
+    inv_w += weights[i] / vs[i].w;
+  }
+
+  return inv_w;
+}
+
+template <typename PixelFn, typename Vertex>
+void flat_bottom(Context& context, const std::array<Vertex, 3>& vertices, const PixelFn pixel_fn) {
+  auto [top, mid, bottom] = vertices;
 
   const float m1 = (mid.pos.x - top.pos.x) / (mid.pos.y - top.pos.y);
   const float m2 = (bottom.pos.x - top.pos.x) / (bottom.pos.y - top.pos.y);
@@ -110,16 +79,17 @@ void textured_flat_bottom(Context& context, const std::array<TexturedVertex, 3>&
 
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
-      const auto weights = get_barycentric_weights(tv, p);
-      const auto [texel, depth] = get_texel(weights, tv, texture);
+      const auto weights = get_barycentric_weights(vertices, p);
+      const auto [color, depth] = pixel_fn(weights);
 
-      context.draw_pixel(x, y, depth, texel);
+      context.draw_pixel(x, y, depth, color);
     }
   }
 }
 
-void textured_flat_top(Context& context, const std::array<TexturedVertex, 3>& tv, const Texture& texture) {
-  auto [top, mid, bottom] = tv;
+template <typename PixelFn, typename Vertex>
+void flat_top(Context& context, const std::array<Vertex, 3>& vertices, const PixelFn pixel_fn) {
+  auto [top, mid, bottom] = vertices;
 
   const float m1 = (mid.pos.x - bottom.pos.x) / (mid.pos.y - bottom.pos.y);
   const float m2 = (top.pos.x - bottom.pos.x) / (top.pos.y - bottom.pos.y);
@@ -137,10 +107,10 @@ void textured_flat_top(Context& context, const std::array<TexturedVertex, 3>& tv
 
     for (int x = left; x <= right; x++) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
-      const auto weights = get_barycentric_weights(tv, p);
-      const auto [texel, depth] = get_texel(weights, tv, texture);
+      const auto weights = get_barycentric_weights(vertices, p);
+      const auto [color, depth] = pixel_fn(weights);
 
-      context.draw_pixel(x, y, depth, texel);
+      context.draw_pixel(x, y, depth, color);
     }
   }
 }
@@ -187,32 +157,29 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   }
 }
 
-void filled_triangle(Context& context, std::array<math::Vec2, 3> v, const uint32_t color) {
-  std::ranges::sort(v, [](const math::Vec2 l, const math::Vec2 r) { return l.y < r.y; });
+void filled_triangle(Context& context, std::array<FlatVertex, 3> vertices, const uint32_t color) {
+  std::ranges::sort(vertices, [](const FlatVertex l, const FlatVertex r) { return l.pos.y < r.pos.y; });
 
-  if (std::abs(v[1].y - v[2].y) < 0.01f) {
-    filled_flat_bottom(context, {v[0], v[2], v[1]}, color);
-  } else if (std::abs(v[0].y - v[1].y) < 0.01f) {
-    filled_flat_top(context, {v[2], v[0], v[1]}, color);
-  } else {
+  auto pixel_fn = [&vertices, color](const std::array<float, 3>& weights) {
+    const float depth = get_depth(weights, vertices);
+    const PixelResult res = {color, depth};
 
-    filled_flat_bottom(context, v, color);
-    filled_flat_top(context, v, color);
-  }
+    return res;
+  };
+
+  flat_bottom(context, vertices, pixel_fn);
+  flat_top(context, vertices, pixel_fn);
 }
 
-void textured_triangle(Context& context, std::array<TexturedVertex, 3> tv, const Texture& texture) {
-  std::ranges::sort(tv, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
+void textured_triangle(Context& context, std::array<TexturedVertex, 3> vertices, const Texture& texture) {
+  std::ranges::sort(vertices, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
 
-  if (std::abs(tv[1].pos.y - tv[2].pos.y) < 0.01f) {
-    textured_flat_bottom(context, tv, texture);
-  } else if (std::abs(tv[0].pos.y - tv[1].pos.y) < 0.01f) {
-    textured_flat_top(context, tv, texture);
-  } else {
+  auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
+    return get_texel(weights, vertices, texture);
+  };
 
-    textured_flat_bottom(context, tv, texture);
-    textured_flat_top(context, tv, texture);
-  }
-};
+  flat_bottom(context, vertices, pixel_fn);
+  flat_top(context, vertices, pixel_fn);
+}
 
 } // namespace render::draw

@@ -1,0 +1,1 @@
+Like generics in C#, but done at compile time in C++. 

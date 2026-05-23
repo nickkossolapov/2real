@@ -103,7 +103,10 @@ void render_entity(Context& context,
 
       draw::textured_triangle(context, textured_vertices, *entity.texture);
     } else {
-      draw::filled_triangle(context, {a.pos, b.pos, c.pos}, color);
+      const std::array<draw::FlatVertex, 3> flat_vertices = {
+          {{.pos = a.pos, .z = a.z, .w = a.w}, {.pos = b.pos, .z = b.z, .w = b.w}, {.pos = c.pos, .z = c.z, .w = c.w}}};
+
+      draw::filled_triangle(context, flat_vertices, color);
     }
   }
 }
