@@ -39,7 +39,8 @@ int main(int argc, char* argv[]) {
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
   const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
-  auto cube_mesh = render::load_obj_file("./assets/f117.obj");
+  auto cube_mesh = render::load_obj_file("./assets/drone.obj");
+  const auto test_texture = render::load_texture_file("./assets/drone.png");
 
   if (!cube_mesh.has_value()) {
     SDL_Log("Failed to load mesh");
@@ -52,8 +53,6 @@ int main(int argc, char* argv[]) {
   scene::Entity test_entity = {.mesh = cube_mesh_ptr};
 
   test_entity.transform.position.z = 5;
-
-  const auto test_texture = render::load_texture_file("./assets/f117.png");
 
   if (!test_texture.has_value()) {
     SDL_Log("Failed to load texture");

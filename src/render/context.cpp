@@ -1,5 +1,7 @@
 #include "context.h"
 
+#include <algorithm>
+
 namespace render {
 
 Context::Context(const int width, const int height)

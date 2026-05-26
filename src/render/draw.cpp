@@ -97,7 +97,7 @@ void flat_top(Context& context, const std::array<Vertex, 3>& vertices, const Pix
   const int y_start = static_cast<int>(std::ceil(mid.pos.y));
   const int y_end = static_cast<int>(std::floor(bottom.pos.y));
 
-  for (int y = y_start; y <= y_end; y++) {
+  for (int y = y_start; y <= y_end; ++y) {
     const float dy = static_cast<float>(y) - bottom.pos.y;
     const float x1 = bottom.pos.x + m1 * dy;
     const float x2 = bottom.pos.x + m2 * dy;
@@ -105,7 +105,7 @@ void flat_top(Context& context, const std::array<Vertex, 3>& vertices, const Pix
     const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
     const int right = static_cast<int>(std::floor(std::max(x1, x2)));
 
-    for (int x = left; x <= right; x++) {
+    for (int x = left; x <= right; ++x) {
       math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
       const auto weights = get_barycentric_weights(vertices, p);
       const auto [color, depth] = pixel_fn(weights);
@@ -121,8 +121,8 @@ void rect(Context& context, const math::Vec2& top_left, const int w, const int h
   const int x = static_cast<int>(top_left.x);
   const int y = static_cast<int>(top_left.y);
 
-  for (int i = x; i < x + w; i++) {
-    for (int j = y; j < y + h; j++) {
+  for (int i = x; i < x + w; ++i) {
+    for (int j = y; j < y + h; ++j) {
       context.draw_pixel(i, j, color);
     }
   }
@@ -150,7 +150,7 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   float current_x = x0;
   float current_y = y0;
 
-  for (int i = 0; i <= side_length; i++) {
+  for (int i = 0; i <= side_length; ++i) {
     context.draw_pixel(std::lround(current_x), std::lround(current_y), color);
     current_x += x_inc;
     current_y += y_inc;

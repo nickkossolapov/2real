@@ -38,7 +38,9 @@ bool is_front_facing(const Triangle& triangle, const math::Vec3& camera_pos) {
   return math::dot(triangle.normal, to_camera) > 0;
 }
 
-std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::Vec3& camera_pos) {
+void transform_entity(const scene::Entity& entity, const math::Vec3& camera_pos, std::vector<Triangle>& out) {
+  out.clear();
+
   math::Mat4 world_matrix = math::mat4::translation(entity.transform.position) *
                             math::mat4::rotation(entity.transform.rotation) * math::mat4::scale(entity.transform.scale);
 
@@ -62,7 +64,7 @@ std::vector<Triangle> transform_entity(const scene::Entity& entity, const math::
 
   auto view = entity.mesh->faces | std::views::transform(make_triangle) | std::views::filter(check_back_face_culling);
 
-  return std::vector(view.begin(), view.end());
+  std::ranges::copy(view, std::back_inserter(out));
 }
 
 uint32_t apply_light_intensity(const uint32_t color, const float intensity) {
@@ -87,7 +89,10 @@ void render_entity(Context& context,
                    const scene::Entity& entity,
                    const scene::Camera& camera,
                    const scene::DirectionalLight& light) {
-  for (const auto triangles = transform_entity(entity, camera.position); const Triangle& t : triangles) {
+  thread_local std::vector<Triangle> triangle_buffer;
+  transform_entity(entity, camera.position, triangle_buffer);
+
+  for (const Triangle& t : triangle_buffer) {
     const auto a = project(viewport, camera, t.vertices[0]);
     const auto b = project(viewport, camera, t.vertices[1]);
     const auto c = project(viewport, camera, t.vertices[2]);

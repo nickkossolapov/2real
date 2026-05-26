@@ -61,7 +61,6 @@ endfunction()
 
 add_executable(basic-rendering
         demos/basic_rendering/basic_rendering.cpp
-        demos/basic_rendering/cube_texture.h
 )
 
 setup_demo(basic-rendering basic_rendering TRUE)

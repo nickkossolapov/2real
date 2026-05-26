@@ -26,7 +26,7 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 # Along the way
 
 - [ ] Unit tests?
-- [ ] Explore C++ build tools (and don't use just CLion's built-in ones)
+- [x] Explore C++ build tools (and don't use just CLion's built-in ones)
 - [ ] Implement more of the math myself, e.g. SIMD (SSE/AVX)
 - [ ] Memory management - maybe an arena allocator?
 - [ ] Threading - see if I can move the physics solver to its own CPU thread
