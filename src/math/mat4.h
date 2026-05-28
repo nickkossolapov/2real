@@ -8,12 +8,8 @@
 namespace math {
 
 struct Mat4 {
-  std::array<std::array<float, 4>, 4> m = {{
-      {1.0f, 0.0f, 0.0f, 0.0f},
-      {0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f, 0.0f, 1.0f, 0.0f},
-      {0.0f, 0.0f, 0.0f, 1.0f}
-  }};
+  std::array<std::array<float, 4>, 4> m = {
+      {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
 
   Mat4 operator*(const Mat4& right) const {
     const auto& r = right.m;
@@ -48,13 +44,9 @@ struct Mat4 {
     return out;
   }
 
-  Vec4 transform_position(const Vec3& v) const {
-    return *this * Vec4(v, 1);
-  }
+  Vec4 transform_position(const Vec3& v) const { return *this * Vec4(v, 1); }
 
-  Vec4 transform_direction(const Vec3& v) const {
-    return *this * Vec4(v, 0);
-  }
+  Vec4 transform_direction(const Vec3& v) const { return *this * Vec4(v, 0); }
 };
 
 namespace mat4 {
@@ -141,6 +133,9 @@ inline Mat4 perspective(const float fov, const float aspect_ratio, const float z
 
   return m;
 }
+
+Mat4 view(const Vec3& position, const Vec3& rotation);
+Mat4 look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
 
 } // namespace mat4
 
