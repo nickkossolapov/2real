@@ -1,5 +1,5 @@
 #pragma once
-#include "../scene/mesh.h"
+#include "scene/mesh.h"
 
 #include <optional>
 #include <string>

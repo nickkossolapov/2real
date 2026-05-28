@@ -8,8 +8,12 @@
 namespace math {
 
 struct Mat4 {
-  std::array<std::array<float, 4>, 4> m = {
-      {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
+  std::array<std::array<float, 4>, 4> m = {{
+      {1.0f, 0.0f, 0.0f, 0.0f},
+      {0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.0f, 1.0f, 0.0f},
+      {0.0f, 0.0f, 0.0f, 1.0f},
+  }};
 
   Mat4 operator*(const Mat4& right) const {
     const auto& r = right.m;
@@ -134,8 +138,21 @@ inline Mat4 perspective(const float fov, const float aspect_ratio, const float z
   return m;
 }
 
-Mat4 view(const Vec3& position, const Vec3& rotation);
-Mat4 look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
+// TODO implement FPS camera
+// Mat4 view(const Vec3& position, const Vec3& rotation);
+
+inline Mat4 look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
+  const Vec3 z = (target - eye).normalized();
+  const Vec3 x = cross(up, z).normalized();
+  const Vec3 y = cross(z, x);
+
+  return {{{
+      {x.x, x.y, x.z, -dot(x, eye)},
+      {y.x, y.y, y.z, -dot(y, eye)},
+      {z.x, z.y, z.z, -dot(z, eye)},
+      {0, 0, 0, 1},
+  }}};
+}
 
 } // namespace mat4
 

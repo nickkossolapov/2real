@@ -14,15 +14,15 @@
 
 namespace {
 
-void update(const float dt, scene::Entity& entity, const input::State& input) {
+void update(const float dt, scene::Entity& entity, const input::State& input, scene::Camera& camera) {
   // entity.transform.rotation.x = input.move_x * std::numbers::pi;
   // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
   // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
-  entity.transform.rotation += dt * 0.0003f;
-  // entity.transform.rotation.y += dt * 0.0003f;
-  // entity.transform.scale += dt * 0.0001f;
-  // entity.transform.position.x = input.look_y;
-  // entity.transform.position.y += dt * 0.0001f;
+
+  // entity.transform.rotation.x += dt * 0.0003f;
+
+  camera.position.x += dt * 0.0003f;
+  camera.position.y += dt * 0.0004f;
 }
 
 } // namespace
@@ -37,10 +37,15 @@ int main(int argc, char* argv[]) {
 
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
-  const scene::Camera camera = {.projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f)};
 
-  auto cube_mesh = render::load_obj_file("./assets/drone.obj");
-  const auto test_texture = render::load_texture_file("./assets/drone.png");
+  scene::Camera camera = {
+      .position = {0, 0, 0},
+      .direction = {0, 0, 1},
+      .projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f),
+  };
+
+  auto cube_mesh = render::load_obj_file("./assets/f22.obj");
+  const auto test_texture = render::load_texture_file("./assets/f22.png");
 
   if (!cube_mesh.has_value()) {
     SDL_Log("Failed to load mesh");
@@ -75,7 +80,7 @@ int main(int argc, char* argv[]) {
     const float dt = frame_limiter.tick();
 
     quit = input::process_input(dt, input_state);
-    update(dt, test_entity, input_state);
+    update(dt, test_entity, input_state, camera);
 
     render::pipeline::render_entity(renderer, viewport, test_entity, camera, light);
     renderer.present(sdl.renderer(), sdl.display_texture());

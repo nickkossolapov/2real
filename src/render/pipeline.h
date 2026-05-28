@@ -1,8 +1,8 @@
 #pragma once
-#include "../scene/camera.h"
-#include "../scene/light.h"
-#include "../scene/mesh.h"
 #include "context.h"
+#include "scene/camera.h"
+#include "scene/light.h"
+#include "scene/mesh.h"
 #include "viewport.h"
 
 namespace render::pipeline {

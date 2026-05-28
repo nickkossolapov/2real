@@ -1,6 +1,6 @@
 #pragma once
-#include "../math/vec2.h"
 #include "context.h"
+#include "math/vec2.h"
 #include "texture.h"
 
 #include <array>
