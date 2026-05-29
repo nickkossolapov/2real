@@ -12,17 +12,30 @@
 #include "scene/camera.h"
 #include "scene/mesh.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 
 void update(const float dt, scene::Entity& entity, const input::State& input, scene::Camera& camera) {
-  // entity.transform.rotation.x = input.move_x * std::numbers::pi;
-  // entity.transform.rotation.y = -input.look_x * std::numbers::pi;
-  // entity.transform.rotation.z = -input.move_y * std::numbers::pi;
+  // Forward/back movement
+  camera.position.x += input.move_y * -std::sin(camera.rotation.y);
+  camera.position.z += input.move_y * std::cos(camera.rotation.y);
+  camera.position.y += input.move_y * std::sin(camera.rotation.x);
 
-  // entity.transform.rotation.x += dt * 0.0003f;
+  // Left/right movement
+  camera.position.x += input.move_x * std::cos(camera.rotation.y);
+  camera.position.z += input.move_x * std::sin(camera.rotation.y);
 
-  camera.position.x += dt * 0.0003f;
-  camera.position.y += dt * 0.0004f;
+  camera.position.y += input.trigger_right - input.trigger_left;
+
+  camera.rotation.x += input.look_y;
+  camera.rotation.y += -input.look_x;
+
+  // Clamp pitch, wrap yaw
+  constexpr float max_pitch = math::deg_to_rad(89.0f);
+  camera.rotation.x = std::clamp(camera.rotation.x, -max_pitch, max_pitch);
+  camera.rotation.y = std::fmod(camera.rotation.y, 2.0f * std::numbers::pi_v<float>);
 }
 
 } // namespace
@@ -40,7 +53,6 @@ int main(int argc, char* argv[]) {
 
   scene::Camera camera = {
       .position = {0, 0, 0},
-      .direction = {0, 0, 1},
       .projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f),
   };
 
@@ -77,9 +89,9 @@ int main(int argc, char* argv[]) {
   input::State input_state;
 
   while (!quit) {
-    const float dt = frame_limiter.tick();
+    const float dt = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
-    quit = input::process_input(dt, input_state);
+    quit = input::process_input(dt, sdl.gamepad(), input_state);
     update(dt, test_entity, input_state, camera);
 
     render::pipeline::render_entity(renderer, viewport, test_entity, camera, light);

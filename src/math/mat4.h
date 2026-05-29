@@ -138,8 +138,9 @@ inline Mat4 perspective(const float fov, const float aspect_ratio, const float z
   return m;
 }
 
-// TODO implement FPS camera
-// Mat4 view(const Vec3& position, const Vec3& rotation);
+inline Mat4 view_from_rotation(const Vec3& position, const Vec3& rotation) {
+  return rotation_x(-rotation.x) * rotation_y(-rotation.y) * rotation_z(-rotation.z) * translation(-position);
+}
 
 inline Mat4 look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
   const Vec3 z = (target - eye).normalized();

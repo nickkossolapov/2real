@@ -1,13 +1,15 @@
 #include "input.h"
 
-#include <cmath>
 #include <SDL3/SDL.h>
+#include <cmath>
 
 namespace input {
 
 namespace {
 
-float get_axis_tilt(const Sint16 value) {
+float get_axis_tilt(SDL_Gamepad* gamepad, const SDL_GamepadAxis axis) {
+  const Sint16 value = SDL_GetGamepadAxis(gamepad, axis);
+
   constexpr int dead_zone = 3500;
   constexpr float end = static_cast<float>(SDL_MAX_SINT16 - dead_zone);
 
@@ -20,9 +22,9 @@ float get_axis_tilt(const Sint16 value) {
   return v / end;
 }
 
-}
+} // namespace
 
-bool process_input(float dt, State& input) {
+bool process_input(const float dt, SDL_Gamepad* gamepad, State& input) {
   SDL_Event e;
 
   while (SDL_PollEvent(&e)) {
@@ -34,20 +36,22 @@ bool process_input(float dt, State& input) {
       if (e.key.key == SDLK_ESCAPE) {
         return true;
       }
-    } else if (e.type == SDL_EVENT_GAMEPAD_AXIS_MOTION) {
-      if (e.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX) {
-        input.move_x = get_axis_tilt(e.gaxis.value);
-      }
-      if (e.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY) {
-        input.move_y = get_axis_tilt(e.gaxis.value);
-      }
-      if (e.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTX) {
-        input.look_x = get_axis_tilt(e.gaxis.value);
-      }
-      if (e.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTY) {
-        input.look_y = get_axis_tilt(e.gaxis.value);
-      }
     }
+  }
+
+  if (gamepad) {
+    constexpr float move_sensitivity = 1.0f;
+    constexpr float look_sensitivity = 2.0f;
+    constexpr float trigger_sensitivity = 1.0f;
+
+    input.move_x = get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_LEFTX) * dt * move_sensitivity;
+    input.move_y = -get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_LEFTY) * dt * move_sensitivity;
+
+    input.look_x = get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_RIGHTX) * dt * look_sensitivity;
+    input.look_y = -get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_RIGHTY) * dt * look_sensitivity;
+
+    input.trigger_left = get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) * dt * trigger_sensitivity;
+    input.trigger_right = get_axis_tilt(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) * dt * trigger_sensitivity;
   }
 
   return false;

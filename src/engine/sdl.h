@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 #include <SDL3/SDL.h>
+#include <memory>
 
 namespace engine {
 
@@ -52,6 +52,7 @@ public:
 
   SDL_Renderer& renderer() const { return *renderer_; }
   SDL_Texture& display_texture() const { return *display_texture_; }
+  SDL_Gamepad* gamepad() const { return controller_.get(); }
 
 private:
   sdl::Window window_;
