@@ -1,14 +1,12 @@
 #pragma once
-#include "math/vec3.h"
+
+#include "frustum.h"
+#include "triangle.h"
 
 #include <vector>
 
 namespace render {
 
-struct ClipVertex {
-  math::Vec3 pos;
-};
-
-void clip_polygon(std::vector<ClipVertex>& out);
+void clip_triangle(const Frustum& frustum, const Triangle& triangle, std::vector<Triangle>& out);
 
 } // namespace render

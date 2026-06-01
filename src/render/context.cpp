@@ -4,9 +4,10 @@
 
 namespace render {
 
-Context::Context(const int width, const int height)
+Context::Context(const int width, const int height, const uint32_t background_color)
     : width_(width),
       height_(height),
+      background_color_(background_color),
       color_buffer_(height * width),
       depth_buffer_(height * width) {}
 
@@ -32,7 +33,7 @@ void Context::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_UpdateTexture(&display_texture, nullptr, color_buffer_.data(), width_ * sizeof(uint32_t));
   SDL_RenderTexture(&renderer, &display_texture, nullptr, nullptr);
 
-  std::ranges::fill(color_buffer_, 0xFF87CEEB);
+  std::ranges::fill(color_buffer_, background_color_);
   std::ranges::fill(depth_buffer_, 0.0f);
   SDL_RenderPresent(&renderer);
 }

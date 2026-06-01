@@ -1,5 +1,6 @@
 #include "pipeline.h"
 
+#include "clipping.h"
 #include "draw.h"
 #include "scene/light.h"
 #include "triangle.h"
@@ -53,7 +54,10 @@ Triangle make_triangle(const scene::Entity& entity, const math::Mat4& view_matri
   return Triangle({a, b, c});
 }
 
-void transform_entity(const scene::Entity& entity, const math::Mat4& view_matrix, std::vector<Triangle>& out) {
+void transform_entity(const scene::Entity& entity,
+                      const math::Mat4& view_matrix,
+                      const Frustum& frustum,
+                      std::vector<Triangle>& out) {
   out.clear();
 
   const math::Mat4 world_matrix = math::mat4::translation(entity.transform.position) *
@@ -68,6 +72,8 @@ void transform_entity(const scene::Entity& entity, const math::Mat4& view_matrix
     if (is_back_facing(triangle)) {
       continue;
     }
+
+    clip_triangle(frustum, triangle, out);
 
     out.push_back(triangle);
   }
@@ -98,10 +104,11 @@ void render_entity(Context& context,
                    const RenderMode mode) {
   thread_local std::vector<Triangle> triangle_buffer;
   const math::Mat4 view = camera.view();
+  const Frustum frustum = camera.frustum();
   const math::Vec3 view_light_dir = view.transform_direction(light.direction).xyz().normalized();
   const math::Mat4 projection = camera.projection();
 
-  transform_entity(entity, view, triangle_buffer);
+  transform_entity(entity, view, frustum, triangle_buffer);
 
   for (const Triangle& t : triangle_buffer) {
     const auto a = project(viewport, projection, t.vertices[0]);
