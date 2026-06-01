@@ -4,6 +4,7 @@ PointerAlignment: Left
 BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 PackConstructorInitializers: Never
 AlwaysBreakAfterReturnType: None

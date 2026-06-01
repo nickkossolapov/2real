@@ -17,13 +17,18 @@ add_library(
         src/input/input.h
         src/math/common.h
         src/math/mat4.h
+        src/math/plane.h
+        src/math/plane.h
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
+        src/render/clipping.cpp
+        src/render/clipping.h
         src/render/context.cpp
         src/render/context.h
         src/render/draw.cpp
         src/render/draw.h
+        src/render/frustum.h
         src/render/obj_loader.cpp
         src/render/obj_loader.h
         src/render/pipeline.cpp
@@ -36,6 +41,7 @@ add_library(
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h
+        src/render/clipping.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

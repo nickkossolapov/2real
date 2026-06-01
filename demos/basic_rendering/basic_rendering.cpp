@@ -51,10 +51,7 @@ int main(int argc, char* argv[]) {
   constexpr float fov = math::deg_to_rad(60.0f);
   constexpr float aspect = static_cast<float>(engine::window::height) / static_cast<float>(engine::window::width);
 
-  scene::Camera camera = {
-      .position = {0, 0, 0},
-      .projection = math::mat4::perspective(fov, aspect, 0.1f, 100.0f),
-  };
+  scene::Camera camera = {.fov = fov, .aspect_ratio = aspect, .z_near = 0.1f, .z_far = 100.0f, .position = {0, 0, 0}};
 
   auto cube_mesh = render::load_obj_file("./assets/f22.obj");
   const auto test_texture = render::load_texture_file("./assets/f22.png");
@@ -94,7 +91,8 @@ int main(int argc, char* argv[]) {
     quit = input::process_input(dt, sdl.gamepad(), input_state);
     update(dt, test_entity, input_state, camera);
 
-    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light);
+    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light, render::RenderMode::Wireframe);
+
     renderer.present(sdl.renderer(), sdl.display_texture());
   }
 

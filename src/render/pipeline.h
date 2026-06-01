@@ -5,12 +5,21 @@
 #include "scene/mesh.h"
 #include "viewport.h"
 
-namespace render::pipeline {
+namespace render {
 
+enum class RenderMode {
+  Textured,
+  Flat,
+  Wireframe
+};
+
+namespace pipeline {
 void render_entity(Context& context,
                    const Viewport& viewport,
                    const scene::Entity& entity,
                    const scene::Camera& camera,
-                   const scene::DirectionalLight& light);
+                   const scene::DirectionalLight& light,
+                   RenderMode mode);
+} // namespace  pipeline
 
-} // namespace render::pipeline
+} // namespace render

@@ -1,15 +1,22 @@
 #pragma once
 
-#include "../math/mat4.h"
-#include "../math/vec3.h"
+#include "math/mat4.h"
+#include "math/vec3.h"
+#include "render/frustum.h"
 
 namespace scene {
 
 struct Camera {
+  float fov;
+  float aspect_ratio;
+  float z_near;
+  float z_far;
   math::Vec3 position;
-  math::Mat4 projection;
 
-  enum class Mode { Rotation, LookAt };
+  enum class Mode {
+    Rotation,
+    LookAt
+  };
   Mode mode = Mode::Rotation;
 
   /// For Rotation mode
@@ -17,6 +24,9 @@ struct Camera {
 
   /// For LookAt mode
   math::Vec3 target;
+
+  math::Mat4 projection() const { return math::mat4::perspective(fov, aspect_ratio, z_near, z_far); }
+  render::Frustum frustum() const { return render::make_perspective_frustum(fov, z_near, z_far); }
 
   math::Mat4 view() const {
     if (mode == Mode::LookAt) {
