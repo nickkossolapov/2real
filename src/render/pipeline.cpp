@@ -74,8 +74,6 @@ void transform_entity(const scene::Entity& entity,
     }
 
     clip_triangle(frustum, triangle, out);
-
-    out.push_back(triangle);
   }
 }
 
