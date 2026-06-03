@@ -10,6 +10,7 @@ find_package(SDL3 CONFIG REQUIRED)
 
 add_library(
         2real-engine STATIC
+        src/engine/fps_logger.h
         src/engine/sdl.cpp
         src/engine/sdl.h
         src/engine/timing.h
@@ -22,6 +23,7 @@ add_library(
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
+        src/render/clipping.cpp
         src/render/clipping.cpp
         src/render/clipping.h
         src/render/context.cpp
@@ -41,7 +43,6 @@ add_library(
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h
-        src/render/clipping.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

@@ -103,6 +103,8 @@ int main(int argc, char* argv[]) {
 
   input::State input_state;
 
+  engine::FpsLogger fps_logger;
+
   while (!quit) {
     const float dt = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
@@ -112,6 +114,8 @@ int main(int argc, char* argv[]) {
     render::pipeline::render_entity(renderer, viewport, test_entity, camera, light, render::RenderMode::Wireframe);
 
     renderer.present(sdl.renderer(), sdl.display_texture());
+
+    fps_logger.tick();
   }
 
   return 0;
