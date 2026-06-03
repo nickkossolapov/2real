@@ -14,12 +14,35 @@
 #include "scene/mesh.h"
 
 #include <algorithm>
-#include <cmath>
+#include <format>
 
 namespace {
 
-void update(const float dt, scene::Entity& entity, const input::State& input, scene::Camera& camera) {
+void update(const float dt, const input::State& input, scene::Camera& camera) {
   update_fps_camera(camera, input);
+}
+
+std::optional<scene::Entity> create_entity(const std::string& name) {
+  const auto mesh = render::load_obj_file(std::format("./assets/{0}.obj", name));
+  const auto texture = render::load_texture_file(std::format("./assets/{0}.png", name));
+
+  if (!mesh.has_value()) {
+    SDL_Log("Failed to load mesh for %s", name.data());
+
+    return {};
+  }
+
+  scene::Entity entity = {.mesh = std::make_shared<scene::Mesh>(std::move(*mesh))};
+
+  if (!texture.has_value()) {
+    SDL_Log("Failed to load texture for %s", name.data());
+
+    return {};
+  }
+
+  entity.texture = std::make_shared<render::Texture>(texture.value());
+
+  return entity;
 }
 
 } // namespace
@@ -37,40 +60,40 @@ int main(int argc, char* argv[]) {
 
   scene::Camera camera = {.fov = fov, .aspect_ratio = aspect, .z_near = 0.1f, .z_far = 100.0f, .position = {0, 0, 0}};
 
-  auto test_mesh = render::load_obj_file("./assets/f22.obj");
-  const auto test_texture = render::load_texture_file("./assets/f22.png");
-
-  if (!test_mesh.has_value()) {
-    SDL_Log("Failed to load mesh");
-
-    return -1;
-  }
-
-  auto cube_mesh_ptr = std::make_shared<scene::Mesh>(std::move(*test_mesh));
-
-  scene::Entity test_entity = {.mesh = cube_mesh_ptr};
-
-  test_entity.transform.position.z = 5;
-
-  if (!test_texture.has_value()) {
-    SDL_Log("Failed to load texture");
-
-    return -1;
-  }
-
-  test_entity.texture = std::make_shared<render::Texture>(test_texture.value());
-
-  test_entity.transform.position.z = 5.0f;
-
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
 
   bool quit = false;
   constexpr render::Viewport viewport = {engine::window::width, engine::window::height};
 
   constexpr uint32_t blue = 0xFF87CEEB;
-  constexpr uint32_t black = 0xFF000000;
 
-  auto renderer = render::Context(viewport.width, viewport.height, black);
+  auto f22 = create_entity("f22").value();
+  auto f117 = create_entity("f117").value();
+  auto efa = create_entity("efa").value();
+  auto runway = create_entity("runway").value();
+
+  camera.position.x = 1;
+  camera.position.y = 2;
+  camera.position.z = 6;
+  camera.rotation.y = math::deg_to_rad(170);
+  camera.rotation.x = math::deg_to_rad(-20);
+
+  f22.transform.position.z = 0;
+  f22.transform.rotation.y = math::deg_to_rad(90);
+
+  f117.transform.position.z = 1;
+  f117.transform.position.x = 2;
+  f117.transform.rotation.y = math::deg_to_rad(120);
+
+  efa.transform.position.z = 1;
+  efa.transform.position.x = -2;
+  efa.transform.rotation.y = math::deg_to_rad(60);
+
+  runway.transform.position.y = -0.35;
+
+  std::vector entities{f22, f117, efa, runway};
+
+  auto renderer = render::Context(viewport.width, viewport.height, blue);
   auto frame_limiter = engine::FrameLimiter(60, enable_v_sync);
 
   input::State input_state;
@@ -81,9 +104,11 @@ int main(int argc, char* argv[]) {
     const float dt = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
     quit = input::process_input(dt, sdl.gamepad(), input_state);
-    update(dt, test_entity, input_state, camera);
+    update(dt, input_state, camera);
 
-    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light, render::RenderMode::Textured);
+    for (auto& entity : entities) {
+      render::pipeline::render_entity(renderer, viewport, entity, camera, light, render::RenderMode::Textured);
+    }
 
     renderer.present(sdl.renderer(), sdl.display_texture());
 

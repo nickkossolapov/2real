@@ -25,9 +25,11 @@ bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
   return true;
 }
 
-// Used to tile textures, so when vt is not in range [0, 1)
+// Used to tile textures, so when vt is not in range [0, 1]
 float wrap(const float v) {
-  return v - std::floor(v);
+  const float r = v - std::floor(v);
+
+  return r == 0.0f && v > 0.0f ? 1.0f : r;
 }
 
 bool parse_vertex_texture(std::stringstream& ss, math::Vec2& out) {
