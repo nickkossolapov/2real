@@ -43,6 +43,8 @@ add_library(
         src/scene/camera.h
         src/scene/light.h
         src/scene/mesh.h
+        src/scene/camera_controller.h
+        src/scene/camera_controller.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
