@@ -22,16 +22,19 @@ struct Frustum {
   const math::Plane& operator[](FrustumPlane p) const { return planes[static_cast<size_t>(p)]; }
 };
 
-inline Frustum make_perspective_frustum(const float fov, const float z_near, const float z_far) {
+inline Frustum make_perspective_frustum(const float fov_x, const float fov_y, const float z_near, const float z_far) {
   Frustum f;
-  const float a = fov / 2;
-  const float c = cos(a);
-  const float s = sin(a);
+  const float a_x = fov_x / 2;
+  const float a_y = fov_y / 2;
+  const float c_x = cos(a_x);
+  const float c_y = cos(a_y);
+  const float s_x = sin(a_x);
+  const float s_y = sin(a_y);
 
-  f[FrustumPlane::Left] = {.point = {0, 0, 0}, .normal = {c, 0, s}};
-  f[FrustumPlane::Right] = {.point = {0, 0, 0}, .normal = {-c, 0, s}};
-  f[FrustumPlane::Top] = {.point = {0, 0, 0}, .normal = {0, -c, s}};
-  f[FrustumPlane::Bottom] = {.point = {0, 0, 0}, .normal = {0, c, s}};
+  f[FrustumPlane::Left] = {.point = {0, 0, 0}, .normal = {c_x, 0, s_x}};
+  f[FrustumPlane::Right] = {.point = {0, 0, 0}, .normal = {-c_x, 0, s_x}};
+  f[FrustumPlane::Top] = {.point = {0, 0, 0}, .normal = {0, -c_y, s_y}};
+  f[FrustumPlane::Bottom] = {.point = {0, 0, 0}, .normal = {0, c_y, s_y}};
   f[FrustumPlane::Near] = {.point = {0, 0, z_near}, .normal = {0, 0, 1.0f}};
   f[FrustumPlane::Far] = {.point = {0, 0, z_far}, .normal = {0, 0, -1.0f}};
 

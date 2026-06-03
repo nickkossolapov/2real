@@ -26,7 +26,11 @@ struct Camera {
   math::Vec3 target;
 
   math::Mat4 projection() const { return math::mat4::perspective(fov, aspect_ratio, z_near, z_far); }
-  render::Frustum frustum() const { return render::make_perspective_frustum(fov, z_near, z_far); }
+  render::Frustum frustum() const {
+    const float fov_x = 2 * atan(tan(fov / 2) * aspect_ratio);
+
+    return render::make_perspective_frustum(fov_x, fov, z_near, z_far);
+  }
 
   math::Mat4 view() const {
     if (mode == Mode::LookAt) {

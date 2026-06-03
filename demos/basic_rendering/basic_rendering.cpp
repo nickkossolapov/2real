@@ -1,3 +1,4 @@
+#include "engine/fps_logger.h"
 #include "engine/sdl.h"
 #include "engine/timing.h"
 #include "input/input.h"
@@ -53,41 +54,42 @@ int main(int argc, char* argv[]) {
 
   scene::Camera camera = {.fov = fov, .aspect_ratio = aspect, .z_near = 0.1f, .z_far = 100.0f, .position = {0, 0, 0}};
 
-  // auto test_mesh = render::load_obj_file("./assets/f22.obj");
-  // const auto test_texture = render::load_texture_file("./assets/f22.png");
-  //
-  // if (!test_mesh.has_value()) {
-  //   SDL_Log("Failed to load mesh");
-  //
-  //   return -1;
-  // }
-  //
-  // auto cube_mesh_ptr = std::make_shared<scene::Mesh>(std::move(*test_mesh));
-  //
-  // scene::Entity test_entity = {.mesh = cube_mesh_ptr};
-  //
-  // test_entity.transform.position.z = 5;
-  //
-  // if (!test_texture.has_value()) {
-  //   SDL_Log("Failed to load texture");
-  //
-  //   return -1;
-  // }
-  //
-  // test_entity.texture = std::make_shared<render::Texture>(test_texture.value());
+  auto test_mesh = render::load_obj_file("./assets/f22.obj");
+  const auto test_texture = render::load_texture_file("./assets/f22.png");
+
+  if (!test_mesh.has_value()) {
+    SDL_Log("Failed to load mesh");
+
+    return -1;
+  }
+
+  auto cube_mesh_ptr = std::make_shared<scene::Mesh>(std::move(*test_mesh));
+
+  scene::Entity test_entity = {.mesh = cube_mesh_ptr};
+
+  test_entity.transform.position.z = 5;
+
+  if (!test_texture.has_value()) {
+    SDL_Log("Failed to load texture");
+
+    return -1;
+  }
+
+  test_entity.texture = std::make_shared<render::Texture>(test_texture.value());
 
   // Single-triangle test entity for clipping work.
-  scene::Mesh single_triangle_mesh;
-  single_triangle_mesh.vertices = {
-      {1.0f, -1.0f, 0.0f},
-      {-1.0f, -1.0f, 0.0f},
-      {0.0f, 1.0f, 0.0f},
-  };
-  single_triangle_mesh.faces = {
-      {.a = 0, .b = 1, .c = 2},
-  };
+  // scene::Mesh single_triangle_mesh;
+  // single_triangle_mesh.vertices = {
+  //     {1.0f, -1.0f, 0.0f},
+  //     {-1.0f, -1.0f, 0.0f},
+  //     {0.0f, 1.0f, 0.0f},
+  // };
+  // single_triangle_mesh.faces = {
+  //     {.a = 0, .b = 1, .c = 2},
+  // };
+  //
+  // scene::Entity test_entity = {.mesh = std::make_shared<scene::Mesh>(std::move(single_triangle_mesh))};
 
-  scene::Entity test_entity = {.mesh = std::make_shared<scene::Mesh>(std::move(single_triangle_mesh))};
   test_entity.transform.position.z = 5.0f;
 
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
