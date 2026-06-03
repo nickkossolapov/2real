@@ -46,7 +46,10 @@ Triangle make_triangle(const scene::Entity& entity, const math::Mat4& view_matri
 
   if (face.a_uv != -1 && face.b_uv != -1 && face.c_uv != -1) {
     const std::array uvs = {
-        entity.mesh->texture_uvs[face.a_uv], entity.mesh->texture_uvs[face.b_uv], entity.mesh->texture_uvs[face.c_uv]};
+        entity.mesh->texture_uvs[face.a_uv],
+        entity.mesh->texture_uvs[face.b_uv],
+        entity.mesh->texture_uvs[face.c_uv],
+    };
 
     return Triangle({a, b, c}, uvs);
   }

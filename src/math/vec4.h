@@ -9,16 +9,15 @@ struct Vec4 {
 
   explicit Vec4() = default;
 
-  explicit Vec4(const Vec3& v, const float w = 1.0f) : x(v.x), y(v.y), z(v.z), w(w) {
-  }
+  explicit Vec4(const Vec3& v, const float w = 1.0f)
+      : x(v.x),
+        y(v.y),
+        z(v.z),
+        w(w) {}
 
-  Vec3 xyz() const {
-    return {x, y, z};
-  }
+  Vec3 xyz() const { return {x, y, z}; }
 
-  Vec2 xy() const {
-    return {x, y};
-  }
+  Vec2 xy() const { return {x, y}; }
 };
 
 } // namespace math

@@ -10,6 +10,7 @@ PackConstructorInitializers: Never
 AlwaysBreakAfterReturnType: None
 BinPackParameters: false
 BinPackArguments: false
+AllowAllArgumentsOnNextLine: false
 FixNamespaceComments: true
 MaxEmptyLinesToKeep: 1
 SortIncludes: CaseSensitive

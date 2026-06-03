@@ -11,7 +11,12 @@ InitError SdlContext::init(const bool enable_v_sync) {
   SDL_Window* raw_window = nullptr;
   SDL_Renderer* raw_renderer = nullptr;
 
-  if (!SDL_CreateWindowAndRenderer("2real", window::width, window::height, 0, &raw_window, &raw_renderer)) {
+  if (!SDL_CreateWindowAndRenderer("2real",
+                                   window::width * window::scale,
+                                   window::height * window::scale,
+                                   0,
+                                   &raw_window,
+                                   &raw_renderer)) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
     return InitError::WindowCreate;
   }
@@ -26,13 +31,18 @@ InitError SdlContext::init(const bool enable_v_sync) {
     }
   }
 
-  auto* texture = SDL_CreateTexture(renderer_.get(), SDL_PIXELFORMAT_ARGB8888,
-                                    SDL_TEXTUREACCESS_STREAMING, window::width, window::height);
+  auto* texture = SDL_CreateTexture(renderer_.get(),
+                                    SDL_PIXELFORMAT_ARGB8888,
+                                    SDL_TEXTUREACCESS_STREAMING,
+                                    window::width,
+                                    window::height);
 
   if (texture == nullptr) {
     SDL_Log("Couldn't create texture: %s", SDL_GetError());
     return InitError::DisplayTextureCreate;
   }
+
+  SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
   display_texture_.reset(texture);
 

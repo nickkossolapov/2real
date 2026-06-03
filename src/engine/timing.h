@@ -8,8 +8,8 @@ class FrameLimiter {
 
 public:
   explicit FrameLimiter(const float target_fps, bool v_sync)
-    : target_fps_(target_fps), v_sync_(v_sync) {
-  }
+      : target_fps_(target_fps),
+        v_sync_(v_sync) {}
 
   float tick() {
     const uint64_t now = SDL_GetTicks();

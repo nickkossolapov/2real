@@ -6,13 +6,9 @@ namespace math {
 struct Vec2 {
   float x = 0.0f, y = 0.0f;
 
-  float length() const {
-    return std::sqrt(x * x + y * y);
-  }
+  float length() const { return std::sqrt(x * x + y * y); }
 
-  Vec2 operator+(const Vec2& v) const {
-    return {x + v.x, y + v.y};
-  }
+  Vec2 operator+(const Vec2& v) const { return {x + v.x, y + v.y}; }
 
   Vec2& operator+=(const Vec2& v) {
     x += v.x;
@@ -21,9 +17,7 @@ struct Vec2 {
     return *this;
   }
 
-  Vec2 operator-(const Vec2& v) const {
-    return {x - v.x, y - v.y};
-  }
+  Vec2 operator-(const Vec2& v) const { return {x - v.x, y - v.y}; }
 
   Vec2& operator-=(const Vec2& v) {
     x -= v.x;
@@ -32,9 +26,7 @@ struct Vec2 {
     return *this;
   }
 
-  Vec2 operator*(const float s) const {
-    return {x * s, y * s};
-  }
+  Vec2 operator*(const float s) const { return {x * s, y * s}; }
 
   Vec2& operator*=(const float s) {
     x *= s;
@@ -43,9 +35,7 @@ struct Vec2 {
     return *this;
   }
 
-  Vec2 operator/(const float s) const {
-    return {x / s, y / s};
-  }
+  Vec2 operator/(const float s) const { return {x / s, y / s}; }
 
   Vec2& operator/=(const float s) {
     x /= s;
@@ -54,9 +44,7 @@ struct Vec2 {
     return *this;
   }
 
-  Vec2 operator-() const {
-    return {-x, -y};
-  }
+  Vec2 operator-() const { return {-x, -y}; }
 };
 
 inline float dot(const Vec2& v1, const Vec2& v2) {

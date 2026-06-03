@@ -6,12 +6,20 @@ namespace engine {
 
 namespace window {
 
-constexpr int width = 800;
-constexpr int height = 600;
+constexpr int width = 320;
+constexpr int height = 240;
+
+constexpr int scale = 4;
 
 } // namespace window
 
-enum class InitError { None = 0, SDLInit, WindowCreate, DisplayTextureCreate, VSyncEnable };
+enum class InitError {
+  None = 0,
+  SDLInit,
+  WindowCreate,
+  DisplayTextureCreate,
+  VSyncEnable
+};
 
 namespace sdl {
 

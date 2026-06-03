@@ -3,7 +3,6 @@
 #include "engine/timing.h"
 #include "input/input.h"
 #include "math/common.h"
-#include "math/mat4.h"
 #include "math/vec3.h"
 #include "render/context.h"
 #include "render/obj_loader.h"
@@ -77,19 +76,6 @@ int main(int argc, char* argv[]) {
 
   test_entity.texture = std::make_shared<render::Texture>(test_texture.value());
 
-  // Single-triangle test entity for clipping work.
-  // scene::Mesh single_triangle_mesh;
-  // single_triangle_mesh.vertices = {
-  //     {1.0f, -1.0f, 0.0f},
-  //     {-1.0f, -1.0f, 0.0f},
-  //     {0.0f, 1.0f, 0.0f},
-  // };
-  // single_triangle_mesh.faces = {
-  //     {.a = 0, .b = 1, .c = 2},
-  // };
-  //
-  // scene::Entity test_entity = {.mesh = std::make_shared<scene::Mesh>(std::move(single_triangle_mesh))};
-
   test_entity.transform.position.z = 5.0f;
 
   const auto light = scene::DirectionalLight({-0.5f, -1.0f, 0.5f});
@@ -113,7 +99,7 @@ int main(int argc, char* argv[]) {
     quit = input::process_input(dt, sdl.gamepad(), input_state);
     update(dt, test_entity, input_state, camera);
 
-    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light, render::RenderMode::Wireframe);
+    render::pipeline::render_entity(renderer, viewport, test_entity, camera, light, render::RenderMode::Textured);
 
     renderer.present(sdl.renderer(), sdl.display_texture());
 
