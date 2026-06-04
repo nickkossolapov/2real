@@ -39,3 +39,7 @@ No clipping, depth buffer, or scanline fill needed — just project → scale �
 - Contact points and normals
 - Constraint anchors and limits
 - Numerical readouts: penetration depth, energy drift, solver residuals
+
+# ImGui
+
+https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_sdlrenderer3.h
