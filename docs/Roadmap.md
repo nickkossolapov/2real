@@ -7,13 +7,17 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 ## Render
 
 - [ ] Get stuff on the screen
+- [ ] Move to a subpixel rasterizer
 - [ ] Perf: Incremental barycentric interpolation - compute weights at scanline start, then add a constant per x-step instead of calling get_barycentric_weights per pixel
 - [ ] Perf: Precompute 1/w per vertex and interpolate linearly, avoiding per-pixel division in get_texel   
 - [x] Try build math classes - vec3, mat4, and quaternion etc
+- [ ] Add ImGui
 
 ## Physics
 
-- [ ] Get things moving
+- [ ] Get things moving (2D)
+- [ ] Add phyics debug visualiser (see [[./notes/physics-debug-view.md|physics-debug-view]])
+- [ ] Get things moving (3D)
 - [ ] Tensors!
 - [ ] Numerical stability (object sleeping?)
 
@@ -35,6 +39,7 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 - [ ] Profiling - build a frame timer to break down physics vs rendering etc.
 - [ ] Reversed Z-Buffer instead of 1/W-Buffer
 - [ ] Debug visualizer that draws the Minkowski difference and the simplex evolution per step
+- [ ] Add [Eigen](https://libeigen.gitlab.io/) for matrix solving
 
 # Possible resources
 
