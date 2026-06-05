@@ -37,6 +37,18 @@ bool process_input(const float dt, SDL_Gamepad* gamepad, State& input) {
         return true;
       }
     }
+
+    if (e.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN || e.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+      const bool pressed = e.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+
+      switch (e.gbutton.button) {
+        case SDL_GAMEPAD_BUTTON_SOUTH: input.a_pressed = pressed; break;
+        case SDL_GAMEPAD_BUTTON_EAST:  input.b_pressed = pressed; break;
+        case SDL_GAMEPAD_BUTTON_WEST:  input.x_pressed = pressed; break;
+        case SDL_GAMEPAD_BUTTON_NORTH: input.y_pressed = pressed; break;
+        default: break;
+      }
+    }
   }
 
   if (gamepad) {

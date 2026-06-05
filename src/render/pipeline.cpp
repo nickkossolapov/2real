@@ -125,7 +125,7 @@ void render_entity(Context& context,
           {.pos = c.pos, .z = c.z, .w = c.w},
       }};
 
-      const uint32_t color = apply_light_intensity(0xFFFFFFFF, light_intensity);
+      const uint32_t color = apply_light_intensity(entity.flat_colour, light_intensity);
 
       draw::filled_triangle(context, flat_vertices, color);
     }

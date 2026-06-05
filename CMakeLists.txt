@@ -45,6 +45,10 @@ add_library(
         src/scene/mesh.h
         src/scene/camera_controller.h
         src/scene/camera_controller.h
+        src/math/rect.h
+        src/math/rect.h
+        src/math/vec2_fixed.h
+        src/math/vec2_fixed.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

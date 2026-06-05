@@ -12,6 +12,11 @@ struct State {
 
   float trigger_left = 0.0f;
   float trigger_right = 0.0f;
+
+  bool a_pressed = false;
+  bool b_pressed = false;
+  bool x_pressed = false;
+  bool y_pressed = false;
 };
 
 bool process_input(float dt, SDL_Gamepad*, State& input);

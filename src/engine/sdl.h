@@ -6,10 +6,12 @@ namespace engine {
 
 namespace window {
 
-constexpr int width = 320;
-constexpr int height = 240;
+constexpr int width = 120;
+// constexpr int width = 320;
+constexpr int height = 120;
+// constexpr int height = 240;
 
-constexpr int scale = 4;
+constexpr int scale = 10;
 
 } // namespace window
 

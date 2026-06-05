@@ -18,6 +18,7 @@ InitError SdlContext::init(const bool enable_v_sync) {
                                    &raw_window,
                                    &raw_renderer)) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+
     return InitError::WindowCreate;
   }
 
@@ -27,6 +28,7 @@ InitError SdlContext::init(const bool enable_v_sync) {
   if (enable_v_sync) {
     if (!SDL_SetRenderVSync(renderer_.get(), 1)) {
       SDL_Log("Could not enable VSync! SDL error: %s\n", SDL_GetError());
+
       return InitError::VSyncEnable;
     }
   }
@@ -39,6 +41,7 @@ InitError SdlContext::init(const bool enable_v_sync) {
 
   if (texture == nullptr) {
     SDL_Log("Couldn't create texture: %s", SDL_GetError());
+
     return InitError::DisplayTextureCreate;
   }
 

@@ -29,6 +29,7 @@ struct Entity {
   std::shared_ptr<Mesh> mesh;
   Transform transform;
   std::shared_ptr<render::Texture> texture;
+  uint32_t flat_colour;
 };
 
 } // namespace scene
