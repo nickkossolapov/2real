@@ -23,4 +23,6 @@ This is the first demo for 2real, focused on rendering.
 
 ![Flat-shaded rendered Stanford bunny at higher resolution](./bunny.png)
 
+https://github.com/user-attachments/assets/363f0741-a8d9-4809-be3c-a14b031d933a
+
 The video demo is also available [here](./planes.mp4).
