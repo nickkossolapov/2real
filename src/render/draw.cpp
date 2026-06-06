@@ -179,14 +179,14 @@ void filled_triangle(Context& context, std::array<FlatVertex, 3> vertices, const
 }
 
 void textured_triangle(Context& context, std::array<TexturedVertex, 3> vertices, const Texture& texture) {
-  std::ranges::sort(vertices, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
-
-  auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
-    return get_texel(weights, vertices, texture);
-  };
-
-  flat_bottom(context, vertices, pixel_fn);
-  flat_top(context, vertices, pixel_fn);
+  // std::ranges::sort(vertices, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
+  //
+  // auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
+  //   return get_texel(weights, vertices, texture);
+  // };
+  //
+  // flat_bottom(context, vertices, pixel_fn);
+  // flat_top(context, vertices, pixel_fn);
 }
 
 } // namespace render::draw

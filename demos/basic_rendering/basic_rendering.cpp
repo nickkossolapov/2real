@@ -48,6 +48,24 @@ std::optional<scene::Entity> create_entity(const std::string& name) {
   return entity;
 }
 
+struct EdgeWeights {
+  math::Fixed w0, w1, w2;
+
+  EdgeWeights operator+(const EdgeWeights& w) const { return {w0 + w.w0, w1 + w.w1, w2 + w.w2}; }
+
+  EdgeWeights& operator+=(const EdgeWeights& w) {
+    w0 += w.w0;
+    w1 += w.w1;
+    w2 += w.w2;
+
+    return *this;
+  }
+
+  EdgeWeights operator/(const math::Fixed& f) const { return {w0 / f, w1 / f, w2 / f}; }
+
+  bool all_positive() const { return !w0.is_negative() && !w1.is_negative() && !w2.is_negative(); }
+};
+
 math::Fixed edge_cross(const math::Vec2Fixed& v1, const math::Vec2Fixed& v2, const math::Vec2Fixed& p) {
   return math::cross(v2 - v1, p - v1);
 }
@@ -82,9 +100,7 @@ void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v)
   using math::Fixed;
   using math::Vec2Fixed;
 
-  const Vec2Fixed v0{v[0]};
-  const Vec2Fixed v1{v[1]};
-  const Vec2Fixed v2{v[2]};
+  const Vec2Fixed v0{v[0]}, v1{v[1]}, v2{v[2]};
 
   const Fixed area = edge_cross(v0, v1, v2);
 
@@ -92,33 +108,29 @@ void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v)
     return;
   }
 
-  const auto delta_w0 = Vec2Fixed{v1.y - v2.y, v2.x - v1.x};
-  const auto delta_w1 = Vec2Fixed{v2.y - v0.y, v0.x - v2.x};
-  const auto delta_w2 = Vec2Fixed{v0.y - v1.y, v1.x - v0.x};
-
-  const Fixed bias0 = get_top_left_edge_bias(v1, v2);
-  const Fixed bias1 = get_top_left_edge_bias(v2, v0);
-  const Fixed bias2 = get_top_left_edge_bias(v0, v1);
+  const EdgeWeights delta_x = {v1.y - v2.y, v2.y - v0.y, v0.y - v1.y};
+  const EdgeWeights delta_y = {v2.x - v1.x, v0.x - v2.x, v1.x - v0.x};
+  const EdgeWeights biases = {get_top_left_edge_bias(v1, v2),
+                              get_top_left_edge_bias(v2, v0),
+                              get_top_left_edge_bias(v0, v1)};
 
   const auto [x_min, x_max, y_min, y_max] = math::bounding_box(v[0], v[1], v[2]);
 
   const auto half = Fixed{0.5f};
   const auto p0 = Vec2Fixed{Fixed{x_min} + half, Fixed{y_min} + half};
 
-  Fixed w0_row = edge_cross(v1, v2, p0);
-  Fixed w1_row = edge_cross(v2, v0, p0);
-  Fixed w2_row = edge_cross(v0, v1, p0);
+  EdgeWeights row = {
+      edge_cross(v1, v2, p0),
+      edge_cross(v2, v0, p0),
+      edge_cross(v0, v1, p0),
+  };
 
   for (int y = y_min; y < y_max; ++y) {
-    Fixed w0 = w0_row;
-    Fixed w1 = w1_row;
-    Fixed w2 = w2_row;
+    EdgeWeights current = row;
 
     for (int x = x_min; x < x_max; ++x) {
-      if (w0 + bias0 >= Fixed{0} && w1 + bias1 >= Fixed{0} && w2 + bias2 >= Fixed{0}) {
-        const Fixed alpha = w0 / area;
-        const Fixed beta = w1 / area;
-        const Fixed gamma = w2 / area;
+      if ((current + biases).all_positive()) {
+        const auto [alpha, beta, gamma] = current / area;
 
         constexpr auto white = Fixed{0xFF};
 
@@ -128,14 +140,10 @@ void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v)
         context.draw_pixel(x, y, blended_color);
       }
 
-      w0 += delta_w0.x;
-      w1 += delta_w1.x;
-      w2 += delta_w2.x;
+      current += delta_x;
     }
 
-    w0_row += delta_w0.y;
-    w1_row += delta_w1.y;
-    w2_row += delta_w2.y;
+    row += delta_y;
   }
 }
 
@@ -209,6 +217,8 @@ int main(int argc, char* argv[]) {
     update(dt, input_state, camera);
 
     render::pipeline::render_entity(renderer, viewport, f22, camera, light, render::RenderMode::Wireframe);
+
+    // triangle_fill(renderer, std::array{vertices[0], vertices[1], vertices[2]});
 
     renderer.present(sdl.renderer(), sdl.display_texture());
 
