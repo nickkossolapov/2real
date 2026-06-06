@@ -7,7 +7,7 @@ namespace math {
 
 struct Fixed {
 private:
-  static constexpr int32_t scale = 256;
+  static constexpr int32_t scale = 1 << 8;
   int32_t value_ = 0;
 
   struct RawTag {};
@@ -53,10 +53,10 @@ public:
 
   constexpr auto operator<=>(const Fixed&) const = default; // C++20: all comparisons
 
-  constexpr int to_int() const { return value_ / scale; }
+  constexpr float to_float() const { return static_cast<float>(value_) / static_cast<float>(scale); }
 
   constexpr bool is_zero() const { return value_ == 0; }
-  
+
   constexpr bool is_negative() const { return value_ < 0; }
 
   constexpr bool is_positive() const { return value_ > 0; }
@@ -64,10 +64,36 @@ public:
   constexpr int sign() const { return (value_ > 0) - (value_ < 0); }
 
   constexpr Fixed abs() const { return from_raw(value_ < 0 ? -value_ : value_); }
+
+  constexpr int round() const { return (value_ >= 0 ? value_ + scale / 2 : value_ - scale / 2) / scale; }
+
+  constexpr int floor() const { return value_ >= 0 ? value_ / scale : -((-value_ + scale - 1) / scale); }
+
+  constexpr int ceil() const { return value_ >= 0 ? (value_ + scale - 1) / scale : -(-value_ / scale); }
 };
 
-inline Fixed abs(const Fixed f) {
+inline Fixed abs(const Fixed& f) {
   return f.abs();
+}
+
+inline int round(const Fixed& f) {
+  return f.round();
+}
+
+inline int ceil(const Fixed& f) {
+  return f.ceil();
+}
+
+inline int floor(const Fixed& f) {
+  return f.floor();
+}
+
+inline Fixed max(const Fixed& l, const Fixed& r) {
+  return l > r ? Fixed{l} : Fixed{r};
+}
+
+inline Fixed min(const Fixed& l, const Fixed& r) {
+  return l < r ? Fixed{l} : Fixed{r};
 }
 
 } // namespace math

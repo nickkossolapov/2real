@@ -1,6 +1,7 @@
 #include "draw.h"
 
 #include "math/fixed.h"
+#include "math/rect.h"
 #include "math/vec2_fixed.h"
 
 #include <algorithm>
@@ -18,104 +19,117 @@ struct PixelResult {
   float inv_w;
 };
 
-template <typename Vertex>
-std::array<float, 3> get_barycentric_weights(const std::array<Vertex, 3>& v, const math::Vec2& p) {
-  std::array<float, 3> weights;
+struct EdgeWeights {
+  Fixed w0, w1, w2;
 
-  const float total_area = math::cross(v[1].pos - v[0].pos, v[2].pos - v[0].pos);
+  EdgeWeights operator+(const EdgeWeights& w) const { return {w0 + w.w0, w1 + w.w1, w2 + w.w2}; }
 
-  for (int i = 0; i < 3; i++) {
-    weights[i] = cross(v[(i + 1) % 3].pos - p, v[(i + 2) % 3].pos - p) / total_area;
+  EdgeWeights& operator+=(const EdgeWeights& w) {
+    w0 += w.w0;
+    w1 += w.w1;
+    w2 += w.w2;
+
+    return *this;
   }
 
-  return weights;
+  EdgeWeights operator/(const Fixed& f) const { return {w0 / f, w1 / f, w2 / f}; }
+
+  bool all_positive() const { return !w0.is_negative() && !w1.is_negative() && !w2.is_negative(); }
+};
+
+// PixelResult get_texel(const std::array<float, 3>& weights,
+//                       const std::array<TexturedVertex, 3>& tvs,
+//                       const Texture& texture) {
+//   float u = 0.0f;
+//   float v = 0.0f;
+//   float inv_w = 0.0f;
+//
+//   for (int i = 0; i < 3; i++) {
+//     u += weights[i] * tvs[i].uv.x / tvs[i].w;
+//     v += weights[i] * tvs[i].uv.y / tvs[i].w;
+//     inv_w += weights[i] / tvs[i].w;
+//   }
+//
+//   u /= inv_w;
+//   v /= inv_w;
+//
+//   const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
+//   const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
+//
+//   return {texture.data[tex_y * texture.width + tex_x], inv_w};
+// }
+
+float get_depth(const EdgeWeights& weights, const std::array<float, 3>& w) {
+  return weights.w0.to_float() / w[0] + weights.w1.to_float() / w[1] + weights.w2.to_float() / w[2];
 }
 
-PixelResult get_texel(const std::array<float, 3>& weights,
-                      const std::array<TexturedVertex, 3>& tvs,
-                      const Texture& texture) {
-  float u = 0.0f;
-  float v = 0.0f;
-  float inv_w = 0.0f;
+Fixed edge_cross(const Vec2Fixed& v1, const Vec2Fixed& v2, const Vec2Fixed& p) {
+  return math::cross(v2 - v1, p - v1);
+}
 
-  for (int i = 0; i < 3; i++) {
-    u += weights[i] * tvs[i].uv.x / tvs[i].w;
-    v += weights[i] * tvs[i].uv.y / tvs[i].w;
-    inv_w += weights[i] / tvs[i].w;
+Fixed get_top_left_edge_bias(const Vec2Fixed& start, const Vec2Fixed& end) {
+  const auto [dx, dy] = end - start;
+
+  const bool is_top_edge = dy.is_zero() && dx.is_positive();
+  const bool is_left_edge = dy.is_negative();
+
+  const bool is_top_left_edge = is_top_edge || is_left_edge;
+
+  return is_top_left_edge ? Fixed{0} : -Fixed::epsilon();
+}
+
+// Pineda algorithm for rasterizing triangles
+template <typename PixelFn> void triangle(Context& context, const std::array<Vec2Fixed, 3>& v, const PixelFn pixel_fn) {
+  const Fixed area = edge_cross(v[0], v[1], v[2]);
+
+  if (area.is_zero()) {
+    context.draw_pixel(v[0].x.floor() + 1, v[0].y.floor() + 1, 0xFFFF0000);
   }
 
-  u /= inv_w;
-  v /= inv_w;
-
-  const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
-  const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
-
-  return {texture.data[tex_y * texture.width + tex_x], inv_w};
-}
-
-float get_depth(const std::array<float, 3>& weights, const std::array<FlatVertex, 3>& vs) {
-  float inv_w = 0.0f;
-
-  for (int i = 0; i < 3; i++) {
-    inv_w += weights[i] / vs[i].w;
+  if (!area.is_positive()) {
+    return;
   }
 
-  return inv_w;
-}
+  const EdgeWeights delta_x = {v[1].y - v[2].y, v[2].y - v[0].y, v[0].y - v[1].y};
+  const EdgeWeights delta_y = {v[2].x - v[1].x, v[0].x - v[2].x, v[1].x - v[0].x};
+  const EdgeWeights biases = {get_top_left_edge_bias(v[1], v[2]),
+                              get_top_left_edge_bias(v[2], v[0]),
+                              get_top_left_edge_bias(v[0], v[1])};
 
-template <typename PixelFn, typename Vertex>
-void flat_bottom(Context& context, const std::array<Vertex, 3>& vertices, const PixelFn pixel_fn) {
-  auto [top, mid, bottom] = vertices;
+  const auto [x_min, x_max, y_min, y_max] = math::bounding_box(v);
+  const int x_start = floor(x_min), x_end = ceil(x_max), y_start = floor(y_min), y_end = ceil(y_max);
 
-  const float m1 = (mid.pos.x - top.pos.x) / (mid.pos.y - top.pos.y);
-  const float m2 = (bottom.pos.x - top.pos.x) / (bottom.pos.y - top.pos.y);
+  const auto half = Fixed{0.5f};
+  const auto p0 = Vec2Fixed{Fixed{x_start} + half, Fixed{y_start} + half};
 
-  const int y_start = static_cast<int>(std::ceil(top.pos.y));
-  const int y_end = static_cast<int>(std::floor(mid.pos.y));
+  EdgeWeights row = {
+      edge_cross(v[1], v[2], p0),
+      edge_cross(v[2], v[0], p0),
+      edge_cross(v[0], v[1], p0),
+  };
 
-  for (int y = y_start; y <= y_end; y++) {
-    const float dy = static_cast<float>(y) - top.pos.y;
-    const float x1 = top.pos.x + m1 * dy;
-    const float x2 = top.pos.x + m2 * dy;
+  for (int y = y_start; y < y_end; ++y) {
+    EdgeWeights current = row;
 
-    const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
-    const int right = static_cast<int>(std::floor(std::max(x1, x2)));
+    for (int x = x_start; x < x_end; ++x) {
+      bool base = (current + biases).all_positive();
+      bool unbiased = current.all_positive();
 
-    for (int x = left; x <= right; x++) {
-      math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
-      const auto weights = get_barycentric_weights(vertices, p);
-      const auto [color, depth] = pixel_fn(weights);
+      if (!base && unbiased) {
+        context.draw_pixel(x + 1, y + 1, 1.0f, 0xFFFF0000);
+      }
 
-      context.draw_pixel(x, y, depth, color);
+      if ((current + biases).all_positive()) {
+        const auto weights = current / area;
+        const PixelResult res = pixel_fn(weights);
+
+        context.draw_pixel(x, y, res.inv_w, res.color);
+      }
+
+      current += delta_x;
     }
-  }
-}
 
-template <typename PixelFn, typename Vertex>
-void flat_top(Context& context, const std::array<Vertex, 3>& vertices, const PixelFn pixel_fn) {
-  auto [top, mid, bottom] = vertices;
-
-  const float m1 = (mid.pos.x - bottom.pos.x) / (mid.pos.y - bottom.pos.y);
-  const float m2 = (top.pos.x - bottom.pos.x) / (top.pos.y - bottom.pos.y);
-
-  const int y_start = static_cast<int>(std::ceil(mid.pos.y));
-  const int y_end = static_cast<int>(std::floor(bottom.pos.y));
-
-  for (int y = y_start; y <= y_end; ++y) {
-    const float dy = static_cast<float>(y) - bottom.pos.y;
-    const float x1 = bottom.pos.x + m1 * dy;
-    const float x2 = bottom.pos.x + m2 * dy;
-
-    const int left = static_cast<int>(std::ceil(std::min(x1, x2)));
-    const int right = static_cast<int>(std::floor(std::max(x1, x2)));
-
-    for (int x = left; x <= right; ++x) {
-      math::Vec2 p = {static_cast<float>(x), static_cast<float>(y)};
-      const auto weights = get_barycentric_weights(vertices, p);
-      const auto [color, depth] = pixel_fn(weights);
-
-      context.draw_pixel(x, y, depth, color);
-    }
+    row += delta_y;
   }
 }
 
@@ -132,7 +146,7 @@ void rect(Context& context, const math::Vec2& top_left, const int w, const int h
   }
 }
 
-// dda line drawing
+// DDA line drawing
 void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
   auto [x0, y0] = Vec2Fixed{v0};
   auto [x1, y1] = Vec2Fixed{v1};
@@ -143,7 +157,7 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   const Fixed side_length = abs(delta_x) >= abs(delta_y) ? abs(delta_x) : abs(delta_y);
 
   if (side_length.is_zero()) {
-    context.draw_pixel(x0.to_int(), y0.to_int(), color);
+    context.draw_pixel(x0.ceil(), y0.ceil(), color);
 
     return;
   }
@@ -154,28 +168,28 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   Fixed x = x0;
   Fixed y = y0;
 
-  const int end = side_length.to_int();
+  const int end = side_length.round();
 
   for (int i = 0; i <= end; ++i) {
-    context.draw_pixel(x.to_int(), y.to_int(), color);
+    context.draw_pixel(x.round(), y.round(), color);
 
     x += x_inc;
     y += y_inc;
   }
 }
 
-void filled_triangle(Context& context, std::array<FlatVertex, 3> vertices, const uint32_t color) {
-  std::ranges::sort(vertices, [](const FlatVertex l, const FlatVertex r) { return l.pos.y < r.pos.y; });
+void filled_triangle(Context& context, const std::array<FlatVertex, 3>& v, const uint32_t color) {
+  const std::array v_fixed = {Vec2Fixed{v[0].pos}, Vec2Fixed{v[1].pos}, Vec2Fixed{v[2].pos}};
+  const std::array w_fixed{v[0].w, v[1].w, v[2].w};
 
-  auto pixel_fn = [&vertices, color](const std::array<float, 3>& weights) {
-    const float depth = get_depth(weights, vertices);
+  auto pixel_fn = [&w_fixed, color](const EdgeWeights& weights) {
+    const float depth = get_depth(weights, w_fixed);
     const PixelResult res = {color, depth};
 
     return res;
   };
 
-  flat_bottom(context, vertices, pixel_fn);
-  flat_top(context, vertices, pixel_fn);
+  triangle(context, v_fixed, pixel_fn);
 }
 
 void textured_triangle(Context& context, std::array<TexturedVertex, 3> vertices, const Texture& texture) {

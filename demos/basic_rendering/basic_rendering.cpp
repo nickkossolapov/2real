@@ -44,107 +44,9 @@ std::optional<scene::Entity> create_entity(const std::string& name) {
   }
 
   entity.texture = std::make_shared<render::Texture>(texture.value());
+  entity.flat_colour = 0xFFFFFFFF;
 
   return entity;
-}
-
-struct EdgeWeights {
-  math::Fixed w0, w1, w2;
-
-  EdgeWeights operator+(const EdgeWeights& w) const { return {w0 + w.w0, w1 + w.w1, w2 + w.w2}; }
-
-  EdgeWeights& operator+=(const EdgeWeights& w) {
-    w0 += w.w0;
-    w1 += w.w1;
-    w2 += w.w2;
-
-    return *this;
-  }
-
-  EdgeWeights operator/(const math::Fixed& f) const { return {w0 / f, w1 / f, w2 / f}; }
-
-  bool all_positive() const { return !w0.is_negative() && !w1.is_negative() && !w2.is_negative(); }
-};
-
-math::Fixed edge_cross(const math::Vec2Fixed& v1, const math::Vec2Fixed& v2, const math::Vec2Fixed& p) {
-  return math::cross(v2 - v1, p - v1);
-}
-
-bool is_top_left_edge(const math::Vec2Fixed& start, const math::Vec2Fixed& end) {
-  const auto [dx, dy] = end - start;
-
-  const bool is_top_edge = dy.is_zero() && dx.is_positive();
-  const bool is_left_edge = dy.is_negative();
-
-  return is_top_edge || is_left_edge;
-}
-
-math::Fixed get_top_left_edge_bias(const math::Vec2Fixed& start, const math::Vec2Fixed& end) {
-  return is_top_left_edge(start, end) ? math::Fixed{0} : -math::Fixed::epsilon();
-}
-
-uint32_t to_argb(const int32_t r, const int32_t g, const int32_t b) {
-  constexpr uint32_t a = 0xFF;
-
-  return a << 24 | r << 16 | g << 8 | b;
-}
-
-math::Vec2 rotate(const math::Vec2& v, const math::Vec2& center, float a) {
-  const math::Vec2 c = v - center;
-  const auto rot = math::Vec2{c.x * std::cos(a) - c.y * std::sin(a), c.x * std::sin(a) + c.y * std::cos(a)};
-
-  return rot + center;
-}
-
-void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v) {
-  using math::Fixed;
-  using math::Vec2Fixed;
-
-  const Vec2Fixed v0{v[0]}, v1{v[1]}, v2{v[2]};
-
-  const Fixed area = edge_cross(v0, v1, v2);
-
-  if (!area.is_positive()) {
-    return;
-  }
-
-  const EdgeWeights delta_x = {v1.y - v2.y, v2.y - v0.y, v0.y - v1.y};
-  const EdgeWeights delta_y = {v2.x - v1.x, v0.x - v2.x, v1.x - v0.x};
-  const EdgeWeights biases = {get_top_left_edge_bias(v1, v2),
-                              get_top_left_edge_bias(v2, v0),
-                              get_top_left_edge_bias(v0, v1)};
-
-  const auto [x_min, x_max, y_min, y_max] = math::bounding_box(v[0], v[1], v[2]);
-
-  const auto half = Fixed{0.5f};
-  const auto p0 = Vec2Fixed{Fixed{x_min} + half, Fixed{y_min} + half};
-
-  EdgeWeights row = {
-      edge_cross(v1, v2, p0),
-      edge_cross(v2, v0, p0),
-      edge_cross(v0, v1, p0),
-  };
-
-  for (int y = y_min; y < y_max; ++y) {
-    EdgeWeights current = row;
-
-    for (int x = x_min; x < x_max; ++x) {
-      if ((current + biases).all_positive()) {
-        const auto [alpha, beta, gamma] = current / area;
-
-        constexpr auto white = Fixed{0xFF};
-
-        const uint32_t blended_color =
-            to_argb((alpha * white).to_int(), (beta * white).to_int(), (gamma * white).to_int());
-
-        context.draw_pixel(x, y, blended_color);
-      }
-
-      current += delta_x;
-    }
-
-    row += delta_y;
-  }
 }
 
 } // namespace
@@ -216,7 +118,7 @@ int main(int argc, char* argv[]) {
     quit = input::process_input(dt, sdl.gamepad(), input_state);
     update(dt, input_state, camera);
 
-    render::pipeline::render_entity(renderer, viewport, f22, camera, light, render::RenderMode::Wireframe);
+    render::pipeline::render_entity(renderer, viewport, f22, camera, light, render::RenderMode::Flat);
 
     // triangle_fill(renderer, std::array{vertices[0], vertices[1], vertices[2]});
 

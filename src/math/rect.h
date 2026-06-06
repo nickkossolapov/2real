@@ -7,19 +7,19 @@
 
 namespace math {
 
-struct Rect {
-  int x_min;
-  int x_max;
-  int y_min;
-  int y_max;
+template <typename T> struct Rect {
+  T x_min;
+  T x_max;
+  T y_min;
+  T y_max;
 };
 
-inline Rect bounding_box(const Vec2& a, const Vec2& b, const Vec2& c) {
+inline Rect<Fixed> bounding_box(const std::array<Vec2Fixed, 3>& v) {
   return {
-      .x_min = floor_to_int(std::min({a.x, b.x, c.x})),
-      .x_max = ceil_to_int(std::max({a.x, b.x, c.x})),
-      .y_min = floor_to_int(std::min({a.y, b.y, c.y})),
-      .y_max = ceil_to_int(std::max({a.y, b.y, c.y})),
+      .x_min = min(min(v[0].x, v[1].x), v[2].x),
+      .x_max = max(max(v[0].x, v[1].x), v[2].x),
+      .y_min = min(min(v[0].y, v[1].y), v[2].y),
+      .y_max = max(max(v[0].y, v[1].y), v[2].y),
   };
 }
 

@@ -9,7 +9,7 @@ namespace window {
 constexpr int width = 320;
 constexpr int height = 240;
 
-constexpr int scale = 4;
+constexpr int scale = 8;
 
 } // namespace window
 
