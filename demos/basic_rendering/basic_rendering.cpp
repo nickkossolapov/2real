@@ -65,7 +65,13 @@ math::Fixed get_top_left_edge_bias(const math::Vec2Fixed& start, const math::Vec
   return is_top_left_edge(start, end) ? math::Fixed{0} : -math::Fixed::epsilon();
 }
 
-void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v, const uint32_t color) {
+uint32_t to_argb(const int32_t r, const int32_t g, const int32_t b) {
+  constexpr uint32_t a = 0xFF;
+
+  return a << 24 | r << 16 | g << 8 | b;
+}
+
+void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v) {
   using math::Fixed;
   using math::Vec2Fixed;
 
@@ -75,22 +81,53 @@ void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v,
   const Vec2Fixed v1{v[1]};
   const Vec2Fixed v2{v[2]};
 
+  const auto delta_w0 = Vec2Fixed{v1.y - v2.y, v2.x - v1.x};
+  const auto delta_w1 = Vec2Fixed{v2.y - v0.y, v0.x - v2.x};
+  const auto delta_w2 = Vec2Fixed{v0.y - v1.y, v1.x - v0.x};
+
+  const Fixed area = edge_cross(v0, v1, v2);
+
+  if (area.is_zero()) {
+    return;
+  }
+
   const Fixed bias0 = get_top_left_edge_bias(v1, v2);
   const Fixed bias1 = get_top_left_edge_bias(v2, v0);
   const Fixed bias2 = get_top_left_edge_bias(v0, v1);
 
-  for (int x = x_min; x <= x_max; x++) {
-    for (int y = y_min; y <= y_max; y++) {
-      const auto p = Vec2Fixed{x, y};
+  const auto p0 = Vec2Fixed{x_min, y_min};
 
-      const Fixed w0 = edge_cross(v0, v1, p) + bias0;
-      const Fixed w1 = edge_cross(v1, v2, p) + bias1;
-      const Fixed w2 = edge_cross(v2, v0, p) + bias2;
+  Fixed w0_row = edge_cross(v1, v2, p0);
+  Fixed w1_row = edge_cross(v2, v0, p0);
+  Fixed w2_row = edge_cross(v0, v1, p0);
 
-      if (w0 >= Fixed{0} && w1 >= Fixed{0} && w2 >= Fixed{0}) {
-        context.draw_pixel(x, y, color);
+  for (int y = y_min; y <= y_max; ++y) {
+    Fixed w0 = w0_row;
+    Fixed w1 = w1_row;
+    Fixed w2 = w2_row;
+
+    for (int x = x_min; x <= x_max; ++x) {
+      if (w0 + bias0 >= Fixed{0} && w1 + bias1 >= Fixed{0} && w2 + bias2 >= Fixed{0}) {
+        const Fixed alpha = w0 / area;
+        const Fixed beta = w1 / area;
+        const Fixed gamma = w2 / area;
+
+        constexpr auto white = Fixed{0xFF};
+
+        const uint32_t blended_color =
+            to_argb(static_cast<int>(alpha * white), static_cast<int>(beta * white), static_cast<int>(gamma * white));
+
+        context.draw_pixel(x, y, blended_color);
       }
+
+      w0 += delta_w0.x;
+      w1 += delta_w1.x;
+      w2 += delta_w2.x;
     }
+
+    w0_row += delta_w0.y;
+    w1_row += delta_w1.y;
+    w2_row += delta_w2.y;
   }
 }
 
@@ -143,11 +180,11 @@ int main(int argc, char* argv[]) {
   // std::vector entities{f22, f117, efa, runway};
 
   std::vector<math::Vec2> vertices = {
-      {40.5, 40},
-      {80.5, 40},
-      {40.5, 80},
-      {90.5, 90},
-      {75.5, 20},
+      {40, 40},
+      {80, 40},
+      {40, 80},
+      {90, 90},
+      {75, 20},
   };
 
   std::array middle = {vertices[0], vertices[1], vertices[2]};
@@ -168,15 +205,15 @@ int main(int argc, char* argv[]) {
     update(dt, input_state, camera);
 
     if (!input_state.x_pressed) {
-      triangle_fill(renderer, middle, 0xFF0000FF);
+      triangle_fill(renderer, middle);
     }
 
     if (!input_state.b_pressed) {
-      triangle_fill(renderer, right, 0xFFFF0000);
+      triangle_fill(renderer, right);
     }
 
     if (!input_state.y_pressed) {
-      triangle_fill(renderer, top, 0xFFFFFF00);
+      triangle_fill(renderer, top);
     }
 
     renderer.present(sdl.renderer(), sdl.display_texture());

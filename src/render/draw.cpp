@@ -32,7 +32,6 @@ PixelResult get_texel(const std::array<float, 3>& weights,
   float v = 0.0f;
   float inv_w = 0.0f;
 
-  // TODO check for division by 0
   for (int i = 0; i < 3; i++) {
     u += weights[i] * tvs[i].uv.x / tvs[i].w;
     v += weights[i] * tvs[i].uv.y / tvs[i].w;
@@ -51,7 +50,6 @@ PixelResult get_texel(const std::array<float, 3>& weights,
 float get_depth(const std::array<float, 3>& weights, const std::array<FlatVertex, 3>& vs) {
   float inv_w = 0.0f;
 
-  // TODO check for division by 0
   for (int i = 0; i < 3; i++) {
     inv_w += weights[i] / vs[i].w;
   }
