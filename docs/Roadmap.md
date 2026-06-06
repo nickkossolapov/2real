@@ -6,9 +6,9 @@ A final scene with a stable stack of 50+ cubes that I can knock over and don't e
 
 ## Render
 
-- [ ] Get stuff on the screen
-- [ ] Move to a subpixel rasterizer
-- [ ] Perf: Incremental barycentric interpolation - compute weights at scanline start, then add a constant per x-step instead of calling get_barycentric_weights per pixel
+- [x] Get stuff on the screen
+- [x] Move to a subpixel rasterizer
+- [x] Perf: Incremental barycentric interpolation - compute weights at scanline start, then add a constant per x-step instead of calling get_barycentric_weights per pixel
 - [ ] Perf: Precompute 1/w per vertex and interpolate linearly, avoiding per-pixel division in get_texel   
 - [x] Try build math classes - vec3, mat4, and quaternion etc
 - [ ] Add ImGui
