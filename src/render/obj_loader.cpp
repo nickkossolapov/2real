@@ -20,7 +20,10 @@ bool parse_vertex(std::stringstream& ss, math::Vec3& out) {
 
   out.x = x;
   out.y = y;
-  out.z = z;
+
+  // This engine is left-handed (+z into the screen), but .obj assets are generally right-handed(+z out of the screen).
+  // Negate z on import to convert into left-handed space.
+  out.z = -z;
 
   return true;
 }
@@ -30,6 +33,11 @@ float wrap(const float v) {
   const float r = v - std::floor(v);
 
   return r == 0.0f && v > 0.0f ? 1.0f : r;
+}
+
+// .obj indices are 1-based; 0 means "absent" in a face token. Convert to 0-based, or -1 if absent.
+int to_index(const int i) {
+  return i > 0 ? i - 1 : -1;
 }
 
 bool parse_vertex_texture(std::stringstream& ss, math::Vec2& out) {
@@ -90,12 +98,14 @@ bool parse_face(std::stringstream& ss, scene::Face& out) {
     return false;
   }
 
+  // Vertices are mirrored on import (z negated to convert right-handed .obj data into left-handed space).
+  // So reverse the winding order (swap b and c) to keep front faces counter-clockwise for backface culling.
   out.a = vertex_indices[0].v - 1;
-  out.a_uv = vertex_indices[0].vt - 1;
-  out.b = vertex_indices[1].v - 1;
-  out.b_uv = vertex_indices[1].vt - 1;
-  out.c = vertex_indices[2].v - 1;
-  out.c_uv = vertex_indices[2].vt - 1;
+  out.a_uv = to_index(vertex_indices[0].vt);
+  out.b = vertex_indices[2].v - 1;
+  out.b_uv = to_index(vertex_indices[2].vt);
+  out.c = vertex_indices[1].v - 1;
+  out.c_uv = to_index(vertex_indices[1].vt);
 
   return true;
 };
