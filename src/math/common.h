@@ -13,4 +13,12 @@ template <typename T> T lerp(const T& t1, const T& t2, const float t) {
   return t1 + (t2 - t1) * t;
 }
 
+inline int floor_to_int(const float f) {
+  return static_cast<int>(std::floor(f));
+}
+
+inline int ceil_to_int(const float f) {
+  return static_cast<int>(std::ceil(f));
+}
+
 } // namespace math

@@ -3,6 +3,7 @@
 #include "engine/timing.h"
 #include "input/input.h"
 #include "math/common.h"
+#include "math/fixed.h"
 #include "math/rect.h"
 #include "math/vec2_fixed.h"
 #include "math/vec3.h"
@@ -47,35 +48,46 @@ std::optional<scene::Entity> create_entity(const std::string& name) {
   return entity;
 }
 
-int edge_cross(const math::Vec2Fixed& v1, const math::Vec2Fixed& v2, const math::Vec2Fixed& p) {
+math::Fixed edge_cross(const math::Vec2Fixed& v1, const math::Vec2Fixed& v2, const math::Vec2Fixed& p) {
   return math::cross(v2 - v1, p - v1);
 }
 
 bool is_top_left_edge(const math::Vec2Fixed& start, const math::Vec2Fixed& end) {
   const auto [dx, dy] = end - start;
 
-  const bool is_top_edge = dy == 0 && dx > 0;
-  const bool is_left_edge = dy < 0;
+  const bool is_top_edge = dy.is_zero() && dx.is_positive();
+  const bool is_left_edge = dy.is_negative();
 
   return is_top_edge || is_left_edge;
 }
 
-void triangle_fill(render::Context& context, const std::array<math::Vec2Fixed, 3>& v, const uint32_t color) {
+math::Fixed get_top_left_edge_bias(const math::Vec2Fixed& start, const math::Vec2Fixed& end) {
+  return is_top_left_edge(start, end) ? math::Fixed{0} : -math::Fixed::epsilon();
+}
+
+void triangle_fill(render::Context& context, const std::array<math::Vec2, 3>& v, const uint32_t color) {
+  using math::Fixed;
+  using math::Vec2Fixed;
+
   const auto [x_min, x_max, y_min, y_max] = math::bounding_box(v[0], v[1], v[2]);
 
-  const int bias0 = is_top_left_edge(v[1], v[2]) ? 0 : -1;
-  const int bias1 = is_top_left_edge(v[2], v[0]) ? 0 : -1;
-  const int bias2 = is_top_left_edge(v[0], v[1]) ? 0 : -1;
+  const Vec2Fixed v0{v[0]};
+  const Vec2Fixed v1{v[1]};
+  const Vec2Fixed v2{v[2]};
+
+  const Fixed bias0 = get_top_left_edge_bias(v1, v2);
+  const Fixed bias1 = get_top_left_edge_bias(v2, v0);
+  const Fixed bias2 = get_top_left_edge_bias(v0, v1);
 
   for (int x = x_min; x <= x_max; x++) {
     for (int y = y_min; y <= y_max; y++) {
-      math::Vec2Fixed p = {x, y};
+      const auto p = Vec2Fixed{x, y};
 
-      const int w0 = edge_cross(v[0], v[1], p) + bias0;
-      const int w1 = edge_cross(v[1], v[2], p) + bias1;
-      const int w2 = edge_cross(v[2], v[0], p) + bias2;
+      const Fixed w0 = edge_cross(v0, v1, p) + bias0;
+      const Fixed w1 = edge_cross(v1, v2, p) + bias1;
+      const Fixed w2 = edge_cross(v2, v0, p) + bias2;
 
-      if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+      if (w0 >= Fixed{0} && w1 >= Fixed{0} && w2 >= Fixed{0}) {
         context.draw_pixel(x, y, color);
       }
     }
@@ -130,12 +142,12 @@ int main(int argc, char* argv[]) {
   //
   // std::vector entities{f22, f117, efa, runway};
 
-  std::vector<math::Vec2Fixed> vertices = {
-      {40, 40},
-      {80, 40},
-      {40, 80},
-      {90, 90},
-      {75, 20},
+  std::vector<math::Vec2> vertices = {
+      {40.5, 40},
+      {80.5, 40},
+      {40.5, 80},
+      {90.5, 90},
+      {75.5, 20},
   };
 
   std::array middle = {vertices[0], vertices[1], vertices[2]};

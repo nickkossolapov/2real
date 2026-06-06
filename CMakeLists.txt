@@ -49,6 +49,7 @@ add_library(
         src/math/rect.h
         src/math/vec2_fixed.h
         src/math/vec2_fixed.h
+        src/math/fixed.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
