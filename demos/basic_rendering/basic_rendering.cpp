@@ -115,9 +115,9 @@ int main(int argc, char* argv[]) {
     quit = input::process_input(dt, sdl.gamepad(), input_state);
     update(dt, input_state, camera);
 
-    render::pipeline::render_entity(renderer, viewport, f22, camera, light, render::RenderMode::Flat);
-
-    // triangle_fill(renderer, std::array{vertices[0], vertices[1], vertices[2]});
+    for (auto& entity : entities) {
+      render::pipeline::render_entity(renderer, viewport, entity, camera, light, render::RenderMode::Textured);
+    }
 
     renderer.present(sdl.renderer(), sdl.display_texture());
 

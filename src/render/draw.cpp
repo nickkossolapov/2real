@@ -72,27 +72,27 @@ int32_t ceil_div(const int32_t a, const int32_t b) {
   return a >= 0 ? (a + b - 1) / b : -(-a / b);
 }
 
-// PixelResult get_texel(const std::array<float, 3>& weights,
-//                       const std::array<TexturedVertex, 3>& tvs,
-//                       const Texture& texture) {
-//   float u = 0.0f;
-//   float v = 0.0f;
-//   float inv_w = 0.0f;
-//
-//   for (int i = 0; i < 3; i++) {
-//     u += weights[i] * tvs[i].uv.x / tvs[i].w;
-//     v += weights[i] * tvs[i].uv.y / tvs[i].w;
-//     inv_w += weights[i] / tvs[i].w;
-//   }
-//
-//   u /= inv_w;
-//   v /= inv_w;
-//
-//   const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
-//   const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
-//
-//   return {texture.data[tex_y * texture.width + tex_x], inv_w};
-// }
+PixelResult get_texel(const std::array<float, 3>& weights,
+                      const std::array<TexturedVertex, 3>& tvs,
+                      const Texture& texture) {
+  float u = 0.0f;
+  float v = 0.0f;
+  float inv_w = 0.0f;
+
+  for (int i = 0; i < 3; i++) {
+    u += weights[i] * tvs[i].uv.x / tvs[i].w;
+    v += weights[i] * tvs[i].uv.y / tvs[i].w;
+    inv_w += weights[i] / tvs[i].w;
+  }
+
+  u /= inv_w;
+  v /= inv_w;
+
+  const int tex_x = std::clamp(static_cast<int>(u * (texture.width - 1)), 0, texture.width - 1);
+  const int tex_y = std::clamp(static_cast<int>(v * (texture.height - 1)), 0, texture.height - 1);
+
+  return {texture.data[tex_y * texture.width + tex_x], inv_w};
+}
 
 float get_depth(const std::array<float, 3>& weights, const std::array<float, 3>& w) {
   return weights[0] / w[0] + weights[1] / w[1] + weights[2] / w[2];
@@ -197,9 +197,9 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   }
 }
 
-void filled_triangle(Context& context, const std::array<FlatVertex, 3>& v, const uint32_t color) {
-  const std::array verts = {to_subpixel(v[0].pos), to_subpixel(v[1].pos), to_subpixel(v[2].pos)};
-  const std::array w = {v[0].w, v[1].w, v[2].w};
+void filled_triangle(Context& context, const std::array<FlatVertex, 3>& vertices, const uint32_t color) {
+  const std::array v = {to_subpixel(vertices[0].pos), to_subpixel(vertices[1].pos), to_subpixel(vertices[2].pos)};
+  const std::array w = {vertices[0].w, vertices[1].w, vertices[2].w};
 
   auto pixel_fn = [&w, color](const std::array<float, 3>& weights) {
     const float depth = get_depth(weights, w);
@@ -208,18 +208,17 @@ void filled_triangle(Context& context, const std::array<FlatVertex, 3>& v, const
     return res;
   };
 
-  triangle(context, verts, pixel_fn);
+  triangle(context, v, pixel_fn);
 }
 
-void textured_triangle(Context& context, std::array<TexturedVertex, 3> vertices, const Texture& texture) {
-  // std::ranges::sort(vertices, [](const auto& l, const auto& r) { return l.pos.y < r.pos.y; });
-  //
-  // auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
-  //   return get_texel(weights, vertices, texture);
-  // };
-  //
-  // flat_bottom(context, vertices, pixel_fn);
-  // flat_top(context, vertices, pixel_fn);
+void textured_triangle(Context& context, const std::array<TexturedVertex, 3>& vertices, const Texture& texture) {
+  const std::array v = {to_subpixel(vertices[0].pos), to_subpixel(vertices[1].pos), to_subpixel(vertices[2].pos)};
+
+  auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
+    return get_texel(weights, vertices, texture);
+  };
+
+  triangle(context, v, pixel_fn);
 }
 
 } // namespace render::draw
