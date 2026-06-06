@@ -17,11 +17,11 @@ private:
   constexpr static Fixed from_raw(const int r) { return Fixed{r, RawTag{}}; }
 
 public:
+  static constexpr Fixed epsilon() { return from_raw(1); }
+
   Fixed() = default;
   constexpr explicit Fixed(const int i) { value_ = i * scale; }
   explicit Fixed(const float f) { value_ = lrintf(f * scale); }
-
-  constexpr explicit operator int() const { return value_ / scale; }
 
   constexpr Fixed operator+(const Fixed& f) const { return from_raw(value_ + f.value_); }
 
@@ -53,13 +53,21 @@ public:
 
   constexpr auto operator<=>(const Fixed&) const = default; // C++20: all comparisons
 
-  static constexpr Fixed epsilon() { return from_raw(1); }
-  
+  constexpr int to_int() const { return value_ / scale; }
+
   constexpr bool is_zero() const { return value_ == 0; }
+  
   constexpr bool is_negative() const { return value_ < 0; }
+
   constexpr bool is_positive() const { return value_ > 0; }
 
   constexpr int sign() const { return (value_ > 0) - (value_ < 0); }
+
+  constexpr Fixed abs() const { return from_raw(value_ < 0 ? -value_ : value_); }
 };
+
+inline Fixed abs(const Fixed f) {
+  return f.abs();
+}
 
 } // namespace math

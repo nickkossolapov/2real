@@ -1,11 +1,17 @@
 #include "draw.h"
 
+#include "math/fixed.h"
+#include "math/vec2_fixed.h"
+
 #include <algorithm>
 #include <cmath>
 
 namespace render::draw {
 
 namespace {
+
+using math::Fixed;
+using math::Vec2Fixed;
 
 struct PixelResult {
   uint32_t color;
@@ -128,30 +134,33 @@ void rect(Context& context, const math::Vec2& top_left, const int w, const int h
 
 // dda line drawing
 void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
-  auto [x0, y0] = v0;
-  auto [x1, y1] = v1;
+  auto [x0, y0] = Vec2Fixed{v0};
+  auto [x1, y1] = Vec2Fixed{v1};
 
-  const float delta_x = x1 - x0;
-  const float delta_y = y1 - y0;
+  const Fixed delta_x = x1 - x0;
+  const Fixed delta_y = y1 - y0;
 
-  const int side_length =
-      static_cast<int>(std::abs(delta_x) >= std::abs(delta_y) ? std::abs(delta_x) : std::abs(delta_y));
+  const Fixed side_length = abs(delta_x) >= abs(delta_y) ? abs(delta_x) : abs(delta_y);
 
-  if (side_length == 0) {
-    context.draw_pixel(std::lround(x0), std::lround(y0), color);
+  if (side_length.is_zero()) {
+    context.draw_pixel(x0.to_int(), y0.to_int(), color);
+
     return;
   }
 
-  const float x_inc = delta_x / side_length;
-  const float y_inc = delta_y / side_length;
+  const Fixed x_inc = delta_x / side_length;
+  const Fixed y_inc = delta_y / side_length;
 
-  float current_x = x0;
-  float current_y = y0;
+  Fixed x = x0;
+  Fixed y = y0;
 
-  for (int i = 0; i <= side_length; ++i) {
-    context.draw_pixel(std::lround(current_x), std::lround(current_y), color);
-    current_x += x_inc;
-    current_y += y_inc;
+  const int end = side_length.to_int();
+
+  for (int i = 0; i <= end; ++i) {
+    context.draw_pixel(x.to_int(), y.to_int(), color);
+
+    x += x_inc;
+    y += y_inc;
   }
 }
 
