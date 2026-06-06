@@ -1,9 +1,5 @@
 #include "draw.h"
 
-#include "math/fixed.h"
-#include "math/rect.h"
-#include "math/vec2_fixed.h"
-
 #include <algorithm>
 #include <cmath>
 
@@ -11,31 +7,70 @@ namespace render::draw {
 
 namespace {
 
-using math::Fixed;
-using math::Vec2Fixed;
-
 struct PixelResult {
   uint32_t color;
   float inv_w;
 };
 
+constexpr int kSubpixelBits = 4;
+constexpr int32_t kSubpixelScale = 1 << kSubpixelBits;
+
+struct Vec2i {
+  int32_t x, y;
+};
+
+// The three edge-function values at a pixel. Held at scale S^2 (see edge): never
+// rescaled, since only their sign (coverage) and ratio to the area (barycentrics)
+// are used, and both are scale-independent.
 struct EdgeWeights {
-  Fixed w0, w1, w2;
+  int32_t w0, w1, w2;
 
-  EdgeWeights operator+(const EdgeWeights& w) const { return {w0 + w.w0, w1 + w.w1, w2 + w.w2}; }
+  EdgeWeights operator+(const EdgeWeights& e) const { return {w0 + e.w0, w1 + e.w1, w2 + e.w2}; }
 
-  EdgeWeights& operator+=(const EdgeWeights& w) {
-    w0 += w.w0;
-    w1 += w.w1;
-    w2 += w.w2;
+  EdgeWeights& operator+=(const EdgeWeights& e) {
+    w0 += e.w0;
+    w1 += e.w1;
+    w2 += e.w2;
 
     return *this;
   }
 
-  EdgeWeights operator/(const Fixed& f) const { return {w0 / f, w1 / f, w2 / f}; }
+  bool all_non_negative() const { return w0 >= 0 && w1 >= 0 && w2 >= 0; }
 
-  bool all_positive() const { return !w0.is_negative() && !w1.is_negative() && !w2.is_negative(); }
+  std::array<float, 3> normalized(const double inv_area) const {
+    return {static_cast<float>(w0 * inv_area), static_cast<float>(w1 * inv_area), static_cast<float>(w2 * inv_area)};
+  }
 };
+
+// Integer exact edge function. To avoid truncating a fixed point integer to
+int32_t edge(const Vec2i& a, const Vec2i& b, const Vec2i& p) {
+  const int64_t e = static_cast<int64_t>(b.x - a.x) * (p.y - a.y) - static_cast<int64_t>(b.y - a.y) * (p.x - a.x);
+
+  return static_cast<int32_t>(e);
+}
+
+int32_t top_left_bias(const Vec2i& start, const Vec2i& end) {
+  const int32_t dx = end.x - start.x;
+  const int32_t dy = end.y - start.y;
+
+  const bool is_top_edge = dy == 0 && dx > 0;
+  const bool is_left_edge = dy < 0;
+
+  return is_top_edge || is_left_edge ? 0 : -1;
+}
+
+Vec2i to_subpixel(const math::Vec2& v) {
+  return {static_cast<int32_t>(std::lround(v.x * kSubpixelScale)),
+          static_cast<int32_t>(std::lround(v.y * kSubpixelScale))};
+}
+
+int32_t floor_div(const int32_t a, const int32_t b) {
+  return a >= 0 ? a / b : -((-a + b - 1) / b);
+}
+
+int32_t ceil_div(const int32_t a, const int32_t b) {
+  return a >= 0 ? (a + b - 1) / b : -(-a / b);
+}
 
 // PixelResult get_texel(const std::array<float, 3>& weights,
 //                       const std::array<TexturedVertex, 3>& tvs,
@@ -59,77 +94,65 @@ struct EdgeWeights {
 //   return {texture.data[tex_y * texture.width + tex_x], inv_w};
 // }
 
-float get_depth(const EdgeWeights& weights, const std::array<float, 3>& w) {
-  return weights.w0.to_float() / w[0] + weights.w1.to_float() / w[1] + weights.w2.to_float() / w[2];
+float get_depth(const std::array<float, 3>& weights, const std::array<float, 3>& w) {
+  return weights[0] / w[0] + weights[1] / w[1] + weights[2] / w[2];
 }
 
-Fixed edge_cross(const Vec2Fixed& v1, const Vec2Fixed& v2, const Vec2Fixed& p) {
-  return math::cross(v2 - v1, p - v1);
-}
+// Pineda rasterizer with exact integer edge functions
+template <typename PixelFn> void triangle(Context& context, const std::array<Vec2i, 3>& v, const PixelFn pixel_fn) {
+  const int32_t area = edge(v[0], v[1], v[2]);
 
-Fixed get_top_left_edge_bias(const Vec2Fixed& start, const Vec2Fixed& end) {
-  const auto [dx, dy] = end - start;
-
-  const bool is_top_edge = dy.is_zero() && dx.is_positive();
-  const bool is_left_edge = dy.is_negative();
-
-  const bool is_top_left_edge = is_top_edge || is_left_edge;
-
-  return is_top_left_edge ? Fixed{0} : -Fixed::epsilon();
-}
-
-// Pineda algorithm for rasterizing triangles
-template <typename PixelFn> void triangle(Context& context, const std::array<Vec2Fixed, 3>& v, const PixelFn pixel_fn) {
-  const Fixed area = edge_cross(v[0], v[1], v[2]);
-
-  if (area.is_zero()) {
-    context.draw_pixel(v[0].x.floor() + 1, v[0].y.floor() + 1, 0xFFFF0000);
-  }
-
-  if (!area.is_positive()) {
+  if (area <= 0) {
     return;
   }
 
-  const EdgeWeights delta_x = {v[1].y - v[2].y, v[2].y - v[0].y, v[0].y - v[1].y};
-  const EdgeWeights delta_y = {v[2].x - v[1].x, v[0].x - v[2].x, v[1].x - v[0].x};
-  const EdgeWeights biases = {get_top_left_edge_bias(v[1], v[2]),
-                              get_top_left_edge_bias(v[2], v[0]),
-                              get_top_left_edge_bias(v[0], v[1])};
-
-  const auto [x_min, x_max, y_min, y_max] = math::bounding_box(v);
-  const int x_start = floor(x_min), x_end = ceil(x_max), y_start = floor(y_min), y_end = ceil(y_max);
-
-  const auto half = Fixed{0.5f};
-  const auto p0 = Vec2Fixed{Fixed{x_start} + half, Fixed{y_start} + half};
-
-  EdgeWeights row = {
-      edge_cross(v[1], v[2], p0),
-      edge_cross(v[2], v[0], p0),
-      edge_cross(v[0], v[1], p0),
+  const EdgeWeights step_x = {
+      (v[1].y - v[2].y) * kSubpixelScale,
+      (v[2].y - v[0].y) * kSubpixelScale,
+      (v[0].y - v[1].y) * kSubpixelScale,
+  };
+  const EdgeWeights step_y = {
+      (v[2].x - v[1].x) * kSubpixelScale,
+      (v[0].x - v[2].x) * kSubpixelScale,
+      (v[1].x - v[0].x) * kSubpixelScale,
+  };
+  const EdgeWeights bias = {
+      top_left_bias(v[1], v[2]),
+      top_left_bias(v[2], v[0]),
+      top_left_bias(v[0], v[1]),
   };
 
-  for (int y = y_start; y < y_end; ++y) {
+  const int32_t min_x = std::min({v[0].x, v[1].x, v[2].x});
+  const int32_t max_x = std::max({v[0].x, v[1].x, v[2].x});
+  const int32_t min_y = std::min({v[0].y, v[1].y, v[2].y});
+  const int32_t max_y = std::max({v[0].y, v[1].y, v[2].y});
+
+  const int x_start = floor_div(min_x, kSubpixelScale);
+  const int x_end = ceil_div(max_x, kSubpixelScale);
+  const int y_start = floor_div(min_y, kSubpixelScale);
+  const int y_end = ceil_div(max_y, kSubpixelScale);
+
+  constexpr int32_t half = kSubpixelScale / 2;
+  const Vec2i p0 = {x_start * kSubpixelScale + half, y_start * kSubpixelScale + half};
+
+  EdgeWeights row = {edge(v[1], v[2], p0), edge(v[2], v[0], p0), edge(v[0], v[1], p0)};
+
+  const double inv_area = 1.0 / static_cast<double>(area);
+
+  for (int y = y_start; y <= y_end; ++y) {
     EdgeWeights current = row;
 
-    for (int x = x_start; x < x_end; ++x) {
-      bool base = (current + biases).all_positive();
-      bool unbiased = current.all_positive();
-
-      if (!base && unbiased) {
-        context.draw_pixel(x + 1, y + 1, 1.0f, 0xFFFF0000);
-      }
-
-      if ((current + biases).all_positive()) {
-        const auto weights = current / area;
-        const PixelResult res = pixel_fn(weights);
+    for (int x = x_start; x <= x_end; ++x) {
+      if ((current + bias).all_non_negative()) {
+        const PixelResult res = pixel_fn(current.normalized(inv_area));
 
         context.draw_pixel(x, y, res.inv_w, res.color);
       }
 
-      current += delta_x;
+      current += step_x;
     }
 
-    row += delta_y;
+    row += step_y;
   }
 }
 
@@ -148,48 +171,44 @@ void rect(Context& context, const math::Vec2& top_left, const int w, const int h
 
 // DDA line drawing
 void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
-  auto [x0, y0] = Vec2Fixed{v0};
-  auto [x1, y1] = Vec2Fixed{v1};
+  auto [x0, y0] = v0;
+  auto [x1, y1] = v1;
 
-  const Fixed delta_x = x1 - x0;
-  const Fixed delta_y = y1 - y0;
+  const float delta_x = x1 - x0;
+  const float delta_y = y1 - y0;
 
-  const Fixed side_length = abs(delta_x) >= abs(delta_y) ? abs(delta_x) : abs(delta_y);
+  const float side_length = std::abs(delta_x) >= std::abs(delta_y) ? std::abs(delta_x) : std::abs(delta_y);
+  const int steps = static_cast<int>(std::lround(side_length));
 
-  if (side_length.is_zero()) {
-    context.draw_pixel(x0.ceil(), y0.ceil(), color);
-
+  if (steps == 0) {
+    context.draw_pixel(std::lround(x0), std::lround(y0), color);
     return;
   }
 
-  const Fixed x_inc = delta_x / side_length;
-  const Fixed y_inc = delta_y / side_length;
+  const float x_inc = delta_x / side_length;
+  const float y_inc = delta_y / side_length;
 
-  Fixed x = x0;
-  Fixed y = y0;
+  float x = x0, y = y0;
 
-  const int end = side_length.round();
-
-  for (int i = 0; i <= end; ++i) {
-    context.draw_pixel(x.round(), y.round(), color);
-
+  for (int i = 0; i <= steps; ++i) {
+    context.draw_pixel(std::lround(x), std::lround(y), color);
     x += x_inc;
     y += y_inc;
   }
 }
 
 void filled_triangle(Context& context, const std::array<FlatVertex, 3>& v, const uint32_t color) {
-  const std::array v_fixed = {Vec2Fixed{v[0].pos}, Vec2Fixed{v[1].pos}, Vec2Fixed{v[2].pos}};
-  const std::array w_fixed{v[0].w, v[1].w, v[2].w};
+  const std::array verts = {to_subpixel(v[0].pos), to_subpixel(v[1].pos), to_subpixel(v[2].pos)};
+  const std::array w = {v[0].w, v[1].w, v[2].w};
 
-  auto pixel_fn = [&w_fixed, color](const EdgeWeights& weights) {
-    const float depth = get_depth(weights, w_fixed);
+  auto pixel_fn = [&w, color](const std::array<float, 3>& weights) {
+    const float depth = get_depth(weights, w);
     const PixelResult res = {color, depth};
 
     return res;
   };
 
-  triangle(context, v_fixed, pixel_fn);
+  triangle(context, verts, pixel_fn);
 }
 
 void textured_triangle(Context& context, std::array<TexturedVertex, 3> vertices, const Texture& texture) {

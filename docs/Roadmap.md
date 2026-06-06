@@ -53,3 +53,4 @@ A lot of this will be following existing resources, so these are mostly referenc
 * Maybe try edge function
   rasterization https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage.html
 * Phong shading
+* https://fgiesen.wordpress.com/2011/07/09/a-trip-through-the-graphics-pipeline-2011-index/

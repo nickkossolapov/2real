@@ -17,7 +17,7 @@ inline void update_fps_camera(scene::Camera& camera, const input::State& input) 
   camera.position.x += input.move_x * std::cos(camera.rotation.y);
   camera.position.z += input.move_x * std::sin(camera.rotation.y);
 
-  camera.position.y += (input.trigger_right - input.trigger_left) * 0.0001;
+  camera.position.y += input.trigger_right - input.trigger_left;
 
   camera.rotation.x += input.look_y;
   camera.rotation.y += -input.look_x;
