@@ -1,4 +1,8 @@
 {
+  "autoConvertHtml": false,
+  "promptDelete": false,
+  "focusNewTab": true,
+  "defaultViewMode": "source",
   "showInlineTitle": false,
   "attachmentFolderPath": "attachments",
   "newLinkFormat": "relative"

@@ -1,6 +1,7 @@
 # Obsidian
 docs/.obsidian/workspace.json
 docs/.obsidian/graph.json
+docs/.obsidian/plugins/
 
 # IDE
 .idea/
