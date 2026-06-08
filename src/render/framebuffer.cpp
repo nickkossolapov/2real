@@ -1,23 +1,23 @@
-#include "context.h"
+#include "framebuffer.h"
 
 #include <algorithm>
 
 namespace render {
 
-Context::Context(const int width, const int height, const uint32_t background_color)
+Framebuffer::Framebuffer(const int width, const int height, const uint32_t background_color)
     : width_(width),
       height_(height),
       background_color_(background_color),
       color_buffer_(height * width),
       depth_buffer_(height * width) {}
 
-void Context::draw_pixel(const int x, const int y, const uint32_t color) {
+void Framebuffer::draw_pixel(const int x, const int y, const uint32_t color) {
   if (x >= 0 && x < width_ && y >= 0 && y < height_) {
     color_buffer_[y * width_ + x] = color;
   }
 }
 
-void Context::draw_pixel(const int x, const int y, const float w_inv, const uint32_t color) {
+void Framebuffer::draw_pixel(const int x, const int y, const float w_inv, const uint32_t color) {
   const bool in_screen = x >= 0 && x < width_ && y >= 0 && y < height_;
 
   // depth buffer is currently set up as a 1/W buffer
@@ -27,7 +27,7 @@ void Context::draw_pixel(const int x, const int y, const float w_inv, const uint
   }
 }
 
-void Context::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
+void Framebuffer::present(SDL_Renderer& renderer, SDL_Texture& display_texture) {
   SDL_RenderClear(&renderer);
 
   SDL_UpdateTexture(&display_texture, nullptr, color_buffer_.data(), width_ * sizeof(uint32_t));

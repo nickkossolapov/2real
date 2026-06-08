@@ -42,7 +42,8 @@ struct EdgeWeights {
   }
 };
 
-// Integer exact edge function. To avoid truncating a fixed point integer to
+// Integer exact edge function
+// This avoids truncating a fixed point integer when doing division or multiplication, creating pixel holes
 int32_t edge(const Vec2i& a, const Vec2i& b, const Vec2i& p) {
   const int64_t e = static_cast<int64_t>(b.x - a.x) * (p.y - a.y) - static_cast<int64_t>(b.y - a.y) * (p.x - a.x);
 
@@ -99,7 +100,7 @@ float get_depth(const std::array<float, 3>& weights, const std::array<float, 3>&
 }
 
 // Pineda rasterizer with exact integer edge functions
-template <typename PixelFn> void triangle(Context& context, const std::array<Vec2i, 3>& v, const PixelFn pixel_fn) {
+template <typename PixelFn> void triangle(Framebuffer& fb, const std::array<Vec2i, 3>& v, const PixelFn pixel_fn) {
   const int32_t area = edge(v[0], v[1], v[2]);
 
   if (area <= 0) {
@@ -146,7 +147,7 @@ template <typename PixelFn> void triangle(Context& context, const std::array<Vec
       if ((current + bias).all_non_negative()) {
         const PixelResult res = pixel_fn(current.normalized(inv_area));
 
-        context.draw_pixel(x, y, res.inv_w, res.color);
+        fb.draw_pixel(x, y, res.inv_w, res.color);
       }
 
       current += step_x;
@@ -158,19 +159,19 @@ template <typename PixelFn> void triangle(Context& context, const std::array<Vec
 
 } // namespace
 
-void rect(Context& context, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
+void rect(Framebuffer& fb, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
   const int x = static_cast<int>(top_left.x);
   const int y = static_cast<int>(top_left.y);
 
   for (int i = x; i < x + w; ++i) {
     for (int j = y; j < y + h; ++j) {
-      context.draw_pixel(i, j, color);
+      fb.draw_pixel(i, j, color);
     }
   }
 }
 
 // DDA line drawing
-void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
+void line(Framebuffer& fb, const math::Vec2& v0, const math::Vec2& v1, const uint32_t color) {
   auto [x0, y0] = v0;
   auto [x1, y1] = v1;
 
@@ -181,7 +182,7 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   const int steps = static_cast<int>(std::lround(side_length));
 
   if (steps == 0) {
-    context.draw_pixel(std::lround(x0), std::lround(y0), color);
+    fb.draw_pixel(std::lround(x0), std::lround(y0), color);
     return;
   }
 
@@ -191,13 +192,13 @@ void line(Context& context, const math::Vec2& v0, const math::Vec2& v1, const ui
   float x = x0, y = y0;
 
   for (int i = 0; i <= steps; ++i) {
-    context.draw_pixel(std::lround(x), std::lround(y), color);
+    fb.draw_pixel(std::lround(x), std::lround(y), color);
     x += x_inc;
     y += y_inc;
   }
 }
 
-void filled_triangle(Context& context, const std::array<FlatVertex, 3>& vertices, const uint32_t color) {
+void filled_triangle(Framebuffer& fb, const std::array<FlatVertex, 3>& vertices, const uint32_t color) {
   const std::array v = {to_subpixel(vertices[0].pos), to_subpixel(vertices[1].pos), to_subpixel(vertices[2].pos)};
   const std::array w = {vertices[0].w, vertices[1].w, vertices[2].w};
 
@@ -208,17 +209,17 @@ void filled_triangle(Context& context, const std::array<FlatVertex, 3>& vertices
     return res;
   };
 
-  triangle(context, v, pixel_fn);
+  triangle(fb, v, pixel_fn);
 }
 
-void textured_triangle(Context& context, const std::array<TexturedVertex, 3>& vertices, const Texture& texture) {
+void textured_triangle(Framebuffer& fb, const std::array<TexturedVertex, 3>& vertices, const Texture& texture) {
   const std::array v = {to_subpixel(vertices[0].pos), to_subpixel(vertices[1].pos), to_subpixel(vertices[2].pos)};
 
   auto pixel_fn = [&vertices, &texture](const std::array<float, 3>& weights) {
     return get_texel(weights, vertices, texture);
   };
 
-  triangle(context, v, pixel_fn);
+  triangle(fb, v, pixel_fn);
 }
 
 } // namespace render::draw

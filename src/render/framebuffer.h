@@ -5,12 +5,15 @@
 
 namespace render {
 
-class Context {
+class Framebuffer {
 public:
-  Context(int width, int height, uint32_t background_color);
+  Framebuffer(int width, int height, uint32_t background_color);
   void draw_pixel(int x, int y, uint32_t color);
   void draw_pixel(int x, int y, float w_inv, uint32_t color);
   void present(SDL_Renderer& renderer, SDL_Texture& display_texture);
+
+  int width() const { return width_; }
+  int height() const { return height_; }
 
 private:
   int width_, height_;

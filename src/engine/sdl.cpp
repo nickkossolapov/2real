@@ -2,7 +2,7 @@
 
 namespace engine {
 
-InitError SdlContext::init(const bool enable_v_sync) {
+InitError SdlContext::init(const SdlSettings& settings) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
     SDL_Log("SDL_Init Error: %s\n", SDL_GetError());
     return InitError::SDLInit;
@@ -11,9 +11,9 @@ InitError SdlContext::init(const bool enable_v_sync) {
   SDL_Window* raw_window = nullptr;
   SDL_Renderer* raw_renderer = nullptr;
 
-  if (!SDL_CreateWindowAndRenderer("2real",
-                                   window::width * window::scale,
-                                   window::height * window::scale,
+  if (!SDL_CreateWindowAndRenderer(settings.title,
+                                   settings.width * settings.scale,
+                                   settings.height * settings.scale,
                                    0,
                                    &raw_window,
                                    &raw_renderer)) {
@@ -25,7 +25,7 @@ InitError SdlContext::init(const bool enable_v_sync) {
   window_.reset(raw_window);
   renderer_.reset(raw_renderer);
 
-  if (enable_v_sync) {
+  if (settings.enable_v_sync) {
     if (!SDL_SetRenderVSync(renderer_.get(), 1)) {
       SDL_Log("Could not enable VSync! SDL error: %s\n", SDL_GetError());
 
@@ -36,8 +36,8 @@ InitError SdlContext::init(const bool enable_v_sync) {
   auto* texture = SDL_CreateTexture(renderer_.get(),
                                     SDL_PIXELFORMAT_ARGB8888,
                                     SDL_TEXTUREACCESS_STREAMING,
-                                    window::width,
-                                    window::height);
+                                    settings.width,
+                                    settings.height);
 
   if (texture == nullptr) {
     SDL_Log("Couldn't create texture: %s", SDL_GetError());
@@ -45,7 +45,7 @@ InitError SdlContext::init(const bool enable_v_sync) {
     return InitError::DisplayTextureCreate;
   }
 
-  SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+  SDL_SetTextureScaleMode(texture, settings.scale_mode);
 
   display_texture_.reset(texture);
 

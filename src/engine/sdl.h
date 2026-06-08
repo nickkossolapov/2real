@@ -4,14 +4,14 @@
 
 namespace engine {
 
-namespace window {
-
-constexpr int width = 320;
-constexpr int height = 240;
-
-constexpr int scale = 4;
-
-} // namespace window
+struct SdlSettings {
+  int width = 320;
+  int height = 240;
+  int scale = 4;
+  const char* title = "2real";
+  bool enable_v_sync = true;
+  SDL_ScaleMode scale_mode = SDL_SCALEMODE_NEAREST;
+};
 
 enum class InitError {
   None = 0,
@@ -56,7 +56,7 @@ public:
   SdlContext(SdlContext&&) = delete;
   SdlContext& operator=(SdlContext&&) = delete;
 
-  InitError init(bool enable_v_sync);
+  InitError init(const SdlSettings& settings);
 
   SDL_Renderer& renderer() const { return *renderer_; }
   SDL_Texture& display_texture() const { return *display_texture_; }

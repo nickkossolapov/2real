@@ -1,15 +1,15 @@
-#include "pipeline.h"
+#include "renderer.h"
 
 #include "clipping.h"
+#include "color.h"
 #include "draw.h"
 #include "scene/light.h"
 #include "triangle.h"
 
 #include <algorithm>
-#include <ranges>
 #include <vector>
 
-namespace render::pipeline {
+namespace render {
 
 namespace {
 
@@ -19,7 +19,7 @@ struct ProjectedVertex {
   float w;
 };
 
-ProjectedVertex project(const Viewport& viewport, const math::Mat4& projection, const math::Vec4& pos) {
+ProjectedVertex project(const int width, const int height, const math::Mat4& projection, const math::Vec4& pos) {
   math::Vec4 res = projection * pos;
 
   if (res.w != 0.0f) {
@@ -27,8 +27,8 @@ ProjectedVertex project(const Viewport& viewport, const math::Mat4& projection, 
     res.y /= res.w;
   }
 
-  const float w_center = static_cast<float>(viewport.width) / 2.0f;
-  const float h_center = static_cast<float>(viewport.height) / 2.0f;
+  const float w_center = static_cast<float>(width) / 2.0f;
+  const float h_center = static_cast<float>(height) / 2.0f;
 
   return {.pos = {res.x * w_center + w_center, -res.y * h_center + h_center}, .z = res.z, .w = res.w};
 }
@@ -86,35 +86,36 @@ uint32_t apply_light_intensity(const uint32_t color, const float intensity) {
   const uint32_t g = static_cast<uint32_t>((color >> 8 & 0xFF) * intensity);
   const uint32_t b = static_cast<uint32_t>((color & 0xFF) * intensity);
 
-  return a | (r << 16) | (g << 8) | b;
+  return a | r << 16 | g << 8 | b;
 }
 
 float calculate_flat_lighting(const Triangle& triangle, const math::Vec3& light_dir) {
   constexpr float ambient = 0.1f;
 
   return ambient + (1.0f - ambient) * std::max(0.0f, -math::dot(triangle.normal, light_dir));
-};
+}
 
 } // namespace
 
-void render_entity(Context& context,
-                   const Viewport& viewport,
+void render_entity(Framebuffer& framebuffer,
+                   const scene::Scene& scn,
                    const scene::Entity& entity,
-                   const scene::Camera& camera,
-                   const scene::DirectionalLight& light,
                    const RenderMode mode) {
   thread_local std::vector<Triangle> triangle_buffer;
-  const math::Mat4 view = camera.view();
-  const Frustum frustum = camera.frustum();
-  const math::Vec3 view_light_dir = view.transform_direction(light.direction).xyz().normalized();
-  const math::Mat4 projection = camera.projection();
+
+  const math::Mat4 view = scn.camera.view();
+  const Frustum frustum = scn.camera.frustum();
+  const math::Vec3 view_light_dir = view.transform_direction(scn.light.direction).xyz().normalized();
+  const math::Mat4 projection = scn.camera.projection();
 
   transform_entity(entity, view, frustum, triangle_buffer);
 
+  const int width = framebuffer.width(), height = framebuffer.height();
+
   for (const Triangle& t : triangle_buffer) {
-    const auto a = project(viewport, projection, t.vertices[0]);
-    const auto b = project(viewport, projection, t.vertices[1]);
-    const auto c = project(viewport, projection, t.vertices[2]);
+    const auto a = project(width, height, projection, t.vertices[0]);
+    const auto b = project(width, height, projection, t.vertices[1]);
+    const auto c = project(width, height, projection, t.vertices[2]);
 
     if (mode == RenderMode::Flat) {
       const float light_intensity = calculate_flat_lighting(t, view_light_dir);
@@ -127,7 +128,7 @@ void render_entity(Context& context,
 
       const uint32_t color = apply_light_intensity(entity.flat_colour, light_intensity);
 
-      draw::filled_triangle(context, flat_vertices, color);
+      draw::filled_triangle(framebuffer, flat_vertices, color);
     }
 
     if (mode == RenderMode::Textured) {
@@ -138,8 +139,7 @@ void render_entity(Context& context,
             {.pos = c.pos, .z = c.z, .w = c.w},
         }};
 
-        constexpr uint32_t red = 0xFFFF0000;
-        draw::filled_triangle(context, flat_vertices, red);
+        draw::filled_triangle(framebuffer, flat_vertices, color::red);
       } else {
         const std::array<draw::TexturedVertex, 3> textured_vertices = {{
             {.pos = a.pos, .uv = t.uvs[0], .z = a.z, .w = a.w},
@@ -147,16 +147,16 @@ void render_entity(Context& context,
             {.pos = c.pos, .uv = t.uvs[2], .z = c.z, .w = c.w},
         }};
 
-        draw::textured_triangle(context, textured_vertices, *entity.texture);
+        draw::textured_triangle(framebuffer, textured_vertices, *entity.texture);
       }
     }
 
     if (mode == RenderMode::Wireframe) {
-      draw::line(context, a.pos, b.pos, 0xFFFFFFFF);
-      draw::line(context, b.pos, c.pos, 0xFFFFFFFF);
-      draw::line(context, c.pos, a.pos, 0xFFFFFFFF);
+      draw::line(framebuffer, a.pos, b.pos, color::white);
+      draw::line(framebuffer, b.pos, c.pos, color::white);
+      draw::line(framebuffer, c.pos, a.pos, color::white);
     }
   }
 }
 
-} // namespace render::pipeline
+} // namespace render
