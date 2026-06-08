@@ -62,7 +62,7 @@ function(setup_demo name folder include_assets)
     set_target_properties(${name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}")
 
-    if (include_assets)
+    if (include_assets AND EXISTS "${CMAKE_SOURCE_DIR}/demos/${folder}/assets")
         add_custom_command(TARGET ${name} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:${name}>/assets"
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -78,3 +78,9 @@ add_executable(basic-rendering
 )
 
 setup_demo(basic-rendering basic_rendering TRUE)
+
+add_executable(physics_2d
+        demos/physics_2d/physics_2d.cpp
+)
+
+setup_demo(physics_2d physics_2d TRUE)
