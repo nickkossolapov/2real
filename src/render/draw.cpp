@@ -1,5 +1,7 @@
 #include "draw.h"
 
+#include "math/common.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -12,8 +14,8 @@ struct PixelResult {
   float inv_w;
 };
 
-constexpr int kSubpixelBits = 4;
-constexpr int32_t kSubpixelScale = 1 << kSubpixelBits;
+constexpr int k_subpixel_bits = 4;
+constexpr int32_t k_subpixel_scale = 1 << k_subpixel_bits;
 
 struct Vec2i {
   int32_t x, y;
@@ -61,8 +63,8 @@ int32_t top_left_bias(const Vec2i& start, const Vec2i& end) {
 }
 
 Vec2i to_subpixel(const math::Vec2& v) {
-  return {static_cast<int32_t>(std::lround(v.x * kSubpixelScale)),
-          static_cast<int32_t>(std::lround(v.y * kSubpixelScale))};
+  return {static_cast<int32_t>(std::lround(v.x * k_subpixel_scale)),
+          static_cast<int32_t>(std::lround(v.y * k_subpixel_scale))};
 }
 
 int32_t floor_div(const int32_t a, const int32_t b) {
@@ -108,14 +110,14 @@ template <typename PixelFn> void triangle(Framebuffer& fb, const std::array<Vec2
   }
 
   const EdgeWeights step_x = {
-      (v[1].y - v[2].y) * kSubpixelScale,
-      (v[2].y - v[0].y) * kSubpixelScale,
-      (v[0].y - v[1].y) * kSubpixelScale,
+      (v[1].y - v[2].y) * k_subpixel_scale,
+      (v[2].y - v[0].y) * k_subpixel_scale,
+      (v[0].y - v[1].y) * k_subpixel_scale,
   };
   const EdgeWeights step_y = {
-      (v[2].x - v[1].x) * kSubpixelScale,
-      (v[0].x - v[2].x) * kSubpixelScale,
-      (v[1].x - v[0].x) * kSubpixelScale,
+      (v[2].x - v[1].x) * k_subpixel_scale,
+      (v[0].x - v[2].x) * k_subpixel_scale,
+      (v[1].x - v[0].x) * k_subpixel_scale,
   };
   const EdgeWeights bias = {
       top_left_bias(v[1], v[2]),
@@ -128,13 +130,13 @@ template <typename PixelFn> void triangle(Framebuffer& fb, const std::array<Vec2
   const int32_t min_y = std::min({v[0].y, v[1].y, v[2].y});
   const int32_t max_y = std::max({v[0].y, v[1].y, v[2].y});
 
-  const int x_start = floor_div(min_x, kSubpixelScale);
-  const int x_end = ceil_div(max_x, kSubpixelScale);
-  const int y_start = floor_div(min_y, kSubpixelScale);
-  const int y_end = ceil_div(max_y, kSubpixelScale);
+  const int x_start = floor_div(min_x, k_subpixel_scale);
+  const int x_end = ceil_div(max_x, k_subpixel_scale);
+  const int y_start = floor_div(min_y, k_subpixel_scale);
+  const int y_end = ceil_div(max_y, k_subpixel_scale);
 
-  constexpr int32_t half = kSubpixelScale / 2;
-  const Vec2i p0 = {x_start * kSubpixelScale + half, y_start * kSubpixelScale + half};
+  constexpr int32_t half = k_subpixel_scale / 2;
+  const Vec2i p0 = {x_start * k_subpixel_scale + half, y_start * k_subpixel_scale + half};
 
   EdgeWeights row = {edge(v[1], v[2], p0), edge(v[2], v[0], p0), edge(v[0], v[1], p0)};
 
@@ -155,6 +157,33 @@ template <typename PixelFn> void triangle(Framebuffer& fb, const std::array<Vec2
 
     row += step_y;
   }
+}
+
+// Computes the x half-extent of a circle for each row y in [0, radius] using the midpoint circle algorithm.
+// The algorithm only walks the first octant (x >= y); each generated point (x, y) is mirrored across the diagonal to
+// (y, x) to cover the full quadrant, giving a span [-extent, extent] per row that fills without overdraw.
+std::vector<int> get_circle_edge_points(const int radius) {
+  std::vector extents(radius + 1, 0);
+
+  int x = radius;
+  int y = 0;
+  int error = 1 - radius;
+
+  while (x >= y) {
+    extents[y] = std::max(extents[y], x);
+    extents[x] = std::max(extents[x], y);
+
+    ++y;
+
+    if (error < 0) {
+      error += 2 * y + 1;
+    } else {
+      --x;
+      error += 2 * (y - x) + 1;
+    }
+  }
+
+  return extents;
 }
 
 } // namespace
@@ -220,6 +249,23 @@ void textured_triangle(Framebuffer& fb, const std::array<TexturedVertex, 3>& ver
   };
 
   triangle(fb, v, pixel_fn);
+}
+
+void filled_circle(Framebuffer& fb, const math::Vec2& center, const float radius, const uint32_t color) {
+  const Vec2i center_i = {.x = math::round_to_int(center.x), .y = math::round_to_int(center.y)};
+  const std::vector<int> extents = get_circle_edge_points(math::round_to_int(radius));
+
+  for (int dy = 0; dy < static_cast<int>(extents.size()); ++dy) {
+    const int extent = extents[dy];
+
+    for (int dx = -extent; dx <= extent; ++dx) {
+      fb.draw_pixel(center_i.x + dx, center_i.y + dy, color);
+
+      if (dy != 0) {
+        fb.draw_pixel(center_i.x + dx, center_i.y - dy, color);
+      }
+    }
+  }
 }
 
 } // namespace render::draw

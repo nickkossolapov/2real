@@ -21,4 +21,8 @@ inline int ceil_to_int(const float f) {
   return static_cast<int>(std::ceil(f));
 }
 
+inline int round_to_int(const float f) {
+  return static_cast<int>(std::round(f));
+}
+
 } // namespace math

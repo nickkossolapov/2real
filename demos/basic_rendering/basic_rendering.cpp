@@ -98,5 +98,5 @@ int main(int argc, char* argv[]) {
     }
   };
 
-  engine::run(app_config, update, render);
+  return engine::run(app_config, update, render);
 }

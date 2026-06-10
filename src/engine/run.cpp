@@ -22,11 +22,18 @@ int run(const AppConfig& cfg,
   input::State input_state;
   FpsLogger fps_logger;
 
-  while (!quit) {
-    const float dt = frame_limiter.tick() / 1000.0f; // Convert to seconds
+  float accumulator = 0.0f;
 
-    quit = input::process_input(dt, sdl.gamepad(), input_state);
-    update(dt, input_state);
+  while (!quit) {
+    const float frame_time = frame_limiter.tick() / 1000.0f; // Convert to seconds
+
+    quit = input::process_input(frame_time, sdl.gamepad(), input_state);
+    accumulator += frame_time;
+
+    while (accumulator > 0.0f) {
+      update(frame_time, input_state);
+      accumulator -= cfg.fixed_timestep;
+    }
 
     render(framebuffer);
 
