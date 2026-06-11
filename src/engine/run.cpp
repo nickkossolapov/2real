@@ -5,6 +5,12 @@
 
 namespace engine {
 
+namespace {
+
+constexpr float max_accumulator_time = 0.25f;
+
+}
+
 int run(const AppConfig& cfg,
         const std::function<void(float dt, const input::State&)>& update,
         const std::function<void(render::Framebuffer&)>& render) {
@@ -28,10 +34,11 @@ int run(const AppConfig& cfg,
     const float frame_time = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
     quit = input::process_input(frame_time, sdl.gamepad(), input_state);
-    accumulator += frame_time;
+
+    accumulator += std::min(frame_time, max_accumulator_time);
 
     while (accumulator > 0.0f) {
-      update(frame_time, input_state);
+      update(cfg.fixed_timestep, input_state);
       accumulator -= cfg.fixed_timestep;
     }
 
