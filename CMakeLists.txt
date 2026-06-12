@@ -25,6 +25,7 @@ add_library(
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
+        src/physics/particle.cpp
         src/physics/particle.h
         src/render/clipping.cpp
         src/render/clipping.h

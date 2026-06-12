@@ -24,10 +24,12 @@ int main(int argc, char* argv[]) {
   particle.position.x = 50;
   particle.position.y = 50;
 
-  auto update = [&particle](const float dt, const input::State& input) { particle.position += {2 * dt, 2 * dt}; };
+  particle.acceleration.y = 9.8;
+
+  auto update = [&particle](const float dt, const input::State& input) { particle.integrate(dt); };
 
   auto render = [&particle](render::Framebuffer& fb) {
-    render::draw::filled_circle(fb, particle.position, 50, render::color::white);
+    render::draw::filled_circle(fb, particle.position, 10, render::color::white);
   };
 
   return engine::run(app_config, update, render);

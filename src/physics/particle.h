@@ -9,6 +9,8 @@ struct Particle {
   math::Vec2 velocity;
   math::Vec2 acceleration;
   float mass = 1.0f;
+
+  void integrate(float dt);
 };
 
 } // namespace physics
