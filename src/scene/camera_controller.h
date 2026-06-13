@@ -8,19 +8,25 @@
 #include <cmath>
 
 inline void update_fps_camera(scene::Camera& camera, const input::State& input) {
+  constexpr float move_sensitivity = 0.01f;
+  constexpr float look_sensitivity = 0.02f;
+  constexpr float trigger_sensitivity = 0.01f;
+
+  SDL_Log("%f", input.move.y);
+
   // Forward/back movement
-  camera.position.x += input.move_y * -std::sin(camera.rotation.y);
-  camera.position.z += input.move_y * std::cos(camera.rotation.y);
-  camera.position.y += input.move_y * std::sin(camera.rotation.x);
+  camera.position.x += input.move.y * -std::sin(camera.rotation.y) * move_sensitivity;
+  camera.position.z += input.move.y * std::cos(camera.rotation.y) * move_sensitivity;
+  camera.position.y += input.move.y * std::sin(camera.rotation.x) * move_sensitivity;
 
   // Left/right movement
-  camera.position.x += input.move_x * std::cos(camera.rotation.y);
-  camera.position.z += input.move_x * std::sin(camera.rotation.y);
+  camera.position.x += input.move.x * std::cos(camera.rotation.y) * move_sensitivity;
+  camera.position.z += input.move.x * std::sin(camera.rotation.y) * move_sensitivity;
 
-  camera.position.y += input.trigger_right - input.trigger_left;
+  camera.position.y += (input.trigger_right - input.trigger_left) * trigger_sensitivity;
 
-  camera.rotation.x += input.look_y;
-  camera.rotation.y += -input.look_x;
+  camera.rotation.x += input.look.y * look_sensitivity;
+  camera.rotation.y += -input.look.x * look_sensitivity;
 
   // Clamp pitch, wrap yaw
   constexpr float max_pitch = math::deg_to_rad(89.0f);

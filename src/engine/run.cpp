@@ -33,7 +33,7 @@ int run(const AppConfig& cfg,
   while (!quit) {
     const float frame_time = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
-    quit = input::process_input(frame_time, sdl.gamepad(), input_state);
+    quit = input::process_input(sdl.gamepad(), input_state);
 
     accumulator += std::min(frame_time, max_accumulator_time);
 

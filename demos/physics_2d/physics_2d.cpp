@@ -19,17 +19,36 @@ int main(int argc, char* argv[]) {
       .background = render::color::near_black,
   };
 
-  physics::Particle particle;
+  constexpr float pixels_per_meter = 10.0f;
 
-  particle.position.x = 50;
-  particle.position.y = 50;
+  std::vector<physics::Particle> particles;
 
-  particle.acceleration.y = 9.8;
+  particles.emplace_back(physics::Particle(1, 1, {1, 2}));
+  particles.emplace_back(physics::Particle(3, 3, {2, 2}));
 
-  auto update = [&particle](const float dt, const input::State& input) { particle.integrate(dt); };
+  constexpr math::Vec2 wind = {.x = 100};
+  constexpr math::Vec2 gravity = {.y = 9.8};
 
-  auto render = [&particle](render::Framebuffer& fb) {
-    render::draw::filled_circle(fb, particle.position, 10, render::color::white);
+  auto update = [&particles, &gravity, &wind](const float dt, const input::State& input) {
+    for (auto& p : particles) {
+      const math::Vec2 drag = (p.velocity - wind) * -0.1;
+
+      p.add_force(drag);
+    }
+
+    for (auto& p : particles) {
+      p.add_force(gravity * p.mass);
+    }
+
+    for (auto& p : particles) {
+      p.integrate(dt);
+    }
+  };
+
+  auto render = [&particles](render::Framebuffer& fb) {
+    for (auto& p : particles) {
+      render::draw::filled_circle(fb, p.position * pixels_per_meter, p.radius * pixels_per_meter, render::color::white);
+    }
   };
 
   return engine::run(app_config, update, render);
