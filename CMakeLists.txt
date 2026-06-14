@@ -48,6 +48,8 @@ add_library(
         src/scene/light.h
         src/scene/mesh.h
         src/scene/scene.h
+        src/physics/force.h
+        src/physics/force.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

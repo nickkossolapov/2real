@@ -1,26 +1,18 @@
 #pragma once
 
-#include "vec2_fixed.h"
-
-#include <algorithm>
-#include <vector>
+#include "vec2.h"
 
 namespace math {
 
-template <typename T> struct Rect {
-  T x_min;
-  T x_max;
-  T y_min;
-  T y_max;
-};
+struct Rect {
+  float x_min;
+  float x_max;
+  float y_min;
+  float y_max;
 
-inline Rect<Fixed> bounding_box(const std::array<Vec2Fixed, 3>& v) {
-  return {
-      .x_min = min(min(v[0].x, v[1].x), v[2].x),
-      .x_max = max(max(v[0].x, v[1].x), v[2].x),
-      .y_min = min(min(v[0].y, v[1].y), v[2].y),
-      .y_max = max(max(v[0].y, v[1].y), v[2].y),
-  };
-}
+  bool contains(const Vec2 point) const {
+    return point.x >= x_min && point.x <= x_max && point.y >= y_min && point.y <= y_max;
+  }
+};
 
 } // namespace math

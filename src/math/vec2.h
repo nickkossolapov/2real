@@ -8,6 +8,8 @@ struct Vec2 {
 
   float length() const { return std::sqrt(x * x + y * y); }
 
+  float length_squared() const { return x * x + y * y; }
+
   Vec2 operator+(const Vec2& v) const { return {x + v.x, y + v.y}; }
 
   Vec2& operator+=(const Vec2& v) {
