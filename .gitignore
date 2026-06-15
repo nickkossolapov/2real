@@ -57,3 +57,4 @@ build/
 
 # debug information files
 *.dwo
+/.idea/codeStyles/codeStyleConfig.xml

@@ -7,12 +7,10 @@
 #include <algorithm>
 #include <cmath>
 
-inline void update_fps_camera(scene::Camera& camera, const input::State& input) {
+inline void update_fps_camera(scene::Camera& camera, const input::Snapshot& input) {
   constexpr float move_sensitivity = 0.01f;
   constexpr float look_sensitivity = 0.02f;
   constexpr float trigger_sensitivity = 0.01f;
-
-  SDL_Log("%f", input.move.y);
 
   // Forward/back movement
   camera.position.x += input.move.y * -std::sin(camera.rotation.y) * move_sensitivity;

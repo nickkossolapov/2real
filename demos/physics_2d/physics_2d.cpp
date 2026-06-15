@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
       world_height,
   };
 
-  auto update = [&particles, &gravity, &wind, &liquid](const float dt, const input::State& input) {
+  auto update = [&particles, &gravity, &wind, &liquid](const float dt, const input::Snapshot& input) {
     for (auto& p : particles) {
       p.add_force(gravity * p.mass);
 

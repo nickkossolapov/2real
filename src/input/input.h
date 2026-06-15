@@ -5,19 +5,33 @@
 
 namespace input {
 
-struct State {
-  math::Vec2 move;
-  math::Vec2 look;
-
-  float trigger_left = 0.0f;
-  float trigger_right = 0.0f;
-
-  bool a_pressed = false;
-  bool b_pressed = false;
-  bool x_pressed = false;
-  bool y_pressed = false;
+enum class ButtonState {
+  Up,
+  Pressed,
+  Down,
+  Released
 };
 
-bool process_input(SDL_Gamepad*, State& input);
+struct Snapshot {
+  math::Vec2 move;
+  math::Vec2 look;
+  math::Vec2 cursor_position;
+
+  float trigger_left = 0.0f, trigger_right = 0.0f;
+
+  ButtonState north = ButtonState::Up;
+  ButtonState south = ButtonState::Up;
+  ButtonState east = ButtonState::Up;
+  ButtonState west = ButtonState::Up;
+};
+
+struct KeyboardState {
+  ButtonState arrow_up = ButtonState::Up;
+  ButtonState arrow_down = ButtonState::Up;
+  ButtonState arrow_left = ButtonState::Up;
+  ButtonState arrow_right = ButtonState::Up;
+};
+
+bool process_input(SDL_Gamepad*, Snapshot& input, KeyboardState& kb);
 
 } // namespace input
