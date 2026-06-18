@@ -12,7 +12,8 @@ constexpr float max_accumulator_time = 0.25f;
 }
 
 int run(const AppConfig& cfg,
-        const std::function<void(float dt, const input::Snapshot&)>& update,
+        const std::function<void(const input::InputState&, const input::InputEvents&)>& read_input,
+        const std::function<void(float dt, const input::InputState&)>& update,
         const std::function<void(render::Framebuffer&)>& render) {
   SdlContext sdl;
 
@@ -25,7 +26,8 @@ int run(const AppConfig& cfg,
   auto framebuffer = render::Framebuffer(cfg.sdl_settings.width, cfg.sdl_settings.height, cfg.background);
   auto frame_limiter = FrameLimiter(cfg.target_fps, cfg.sdl_settings.enable_v_sync);
 
-  input::Snapshot input_snapshot;
+  input::InputState input_state;
+  input::InputEvents input_events;
   input::KeyboardState kb_state;
   FpsLogger fps_logger;
 
@@ -34,12 +36,13 @@ int run(const AppConfig& cfg,
   while (!quit) {
     const float frame_time = frame_limiter.tick() / 1000.0f; // Convert to seconds
 
-    quit = input::process_input(sdl.gamepad(), input_snapshot, kb_state);
+    quit = input::process_input(sdl.gamepad(), input_state, input_events, kb_state);
+    read_input(input_state, input_events);
 
     accumulator += std::min(frame_time, max_accumulator_time);
 
     while (accumulator > 0.0f) {
-      update(cfg.fixed_timestep, input_snapshot);
+      update(cfg.fixed_timestep, input_state);
       accumulator -= cfg.fixed_timestep;
     }
 

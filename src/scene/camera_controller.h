@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cmath>
 
-inline void update_fps_camera(scene::Camera& camera, const input::Snapshot& input) {
+inline void update_fps_camera(scene::Camera& camera, const input::InputState& input) {
   constexpr float move_sensitivity = 0.01f;
   constexpr float look_sensitivity = 0.02f;
   constexpr float trigger_sensitivity = 0.01f;

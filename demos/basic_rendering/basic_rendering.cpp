@@ -90,7 +90,9 @@ int main(int argc, char* argv[]) {
 
   std::vector entities{f22, f117, efa, runway};
 
-  auto update = [&scene](float, const input::Snapshot& input) { update_fps_camera(scene.camera, input); };
+  auto read_input = [](const input::InputState&, const input::InputEvents&) {};
+
+  auto update = [&scene](float, const input::InputState& input) { update_fps_camera(scene.camera, input); };
 
   auto render = [&entities, &scene](render::Framebuffer& framebuffer) {
     for (auto& entity : entities) {
@@ -98,5 +100,5 @@ int main(int argc, char* argv[]) {
     }
   };
 
-  return engine::run(app_config, update, render);
+  return engine::run(app_config, read_input, update, render);
 }

@@ -17,7 +17,8 @@ struct AppConfig {
 };
 
 int run(const AppConfig& cfg,
-        const std::function<void(float dt, const input::Snapshot&)>& update,
+        const std::function<void(const input::InputState&, const input::InputEvents&)>& read_input,
+        const std::function<void(float dt, const input::InputState&)>& update,
         const std::function<void(render::Framebuffer&)>& render);
 
 } // namespace engine

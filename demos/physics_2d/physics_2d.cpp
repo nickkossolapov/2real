@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
       world_height,
   };
 
-  auto update = [&particles, &gravity, &wind, &liquid](const float dt, const input::Snapshot& input) {
+  auto update = [&particles, &gravity, &wind, &liquid](const float dt, const input::InputState& input) {
     for (auto& p : particles) {
       p.add_force(gravity * p.mass);
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
         p.add_force(drag);
       } else {
-        const math::Vec2 wind_drag = physics::generate_drag_force(p.velocity - wind, 0.001f);
+        const math::Vec2 wind_drag = physics::generate_drag_force(p.velocity - wind, 0.0005f);
 
         p.add_force(wind_drag);
       }
@@ -82,6 +82,14 @@ int main(int argc, char* argv[]) {
     }
   };
 
+  auto read_input = [&particles](const input::InputState& state, const input::InputEvents& events) {
+    if (events.primary == input::Event::Pressed) {
+      const math::Vec2 pos = state.cursor_position / pixels_per_meter;
+
+      particles.emplace_back(physics::Particle(1, 1, pos));
+    }
+  };
+
   auto render = [&particles](render::Framebuffer& fb) {
     render::draw::rect(fb,
                        {liquid.x_min * pixels_per_meter, liquid.y_min * pixels_per_meter},
@@ -94,5 +102,5 @@ int main(int argc, char* argv[]) {
     }
   };
 
-  return engine::run(app_config, update, render);
+  return engine::run(app_config, read_input, update, render);
 }
