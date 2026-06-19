@@ -46,11 +46,11 @@ int main(int argc, char* argv[]) {
       p.add_force(gravity * p.mass);
 
       if (liquid.contains(p.position)) {
-        const math::Vec2 drag = physics::generate_drag_force(p.velocity, 0.1f);
+        const math::Vec2 drag = physics::force::drag(p.velocity, 0.1f);
 
         p.add_force(drag);
       } else {
-        const math::Vec2 wind_drag = physics::generate_drag_force(p.velocity - wind, 0.0005f);
+        const math::Vec2 wind_drag = physics::force::drag(p.velocity - wind, 0.0005f);
 
         p.add_force(wind_drag);
       }

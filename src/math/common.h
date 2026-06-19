@@ -5,6 +5,8 @@
 
 namespace math {
 
+constexpr float epsilon = 1e-6;
+
 constexpr float deg_to_rad(const float deg) {
   return deg * std::numbers::pi_v<float> / 180.0f;
 }

@@ -1,4 +1,7 @@
 #pragma once
+#include "common.h"
+
+#include <cassert>
 #include <cmath>
 
 namespace math {
@@ -47,6 +50,14 @@ struct Vec2 {
   }
 
   Vec2 operator-() const { return {-x, -y}; }
+
+  Vec2 normalized() const {
+    const float length = std::sqrt(x * x + y * y);
+
+    assert(length >= epsilon);
+
+    return {x / length, y / length};
+  }
 };
 
 inline float dot(const Vec2& v1, const Vec2& v2) {
