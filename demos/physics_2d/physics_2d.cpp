@@ -26,80 +26,63 @@ int main(int argc, char* argv[]) {
   constexpr float world_width = settings.width / pixels_per_meter;
   constexpr float world_height = settings.height / pixels_per_meter;
 
-  std::vector<physics::Particle> particles;
+  const physics::Particle anchor(0, 1, {50, 20});
+  physics::Particle particle(1, 1, {50, 50});
 
-  particles.emplace_back(physics::Particle(1, 1, {1, 2}));
-  // particles.emplace_back(physics::Particle(3, 3, {2, 2}));
+  auto update = [&particle, &anchor](const float dt, const input::InputState& input) {
+    // particle.add_force(physics::force::spring(particle.position, anchor.position, 20, 2));
+    particle.add_force(physics::force::damped_spring(particle.position,
+                                                     anchor.position,
+                                                     particle.velocity - anchor.velocity,
+                                                     20,
+                                                     0.02,
+                                                     5));
 
-  constexpr math::Vec2 wind = {.x = 100};
-  constexpr math::Vec2 gravity = {.y = 9.8};
+    particle.integrate(dt);
 
-  constexpr math::Rect liquid = {
-      0,
-      world_width,
-      world_height / 2,
-      world_height,
+    // for (auto& p : particles) {
+    //   p.integrate(dt);
+    // }
+    //
+    // for (auto& p : particles) {
+    //   // Note: not real physics for now
+    //   constexpr float restitution = 0.9f;
+    //
+    //   if (p.position.x - p.radius <= 0) {
+    //     p.position.x = p.radius;
+    //     p.velocity.x *= -restitution;
+    //   } else if (p.position.x + p.radius >= world_width) {
+    //     p.position.x = world_width - p.radius;
+    //     p.velocity.x *= -restitution;
+    //   }
+    //
+    //   if (p.position.y - p.radius <= 0) {
+    //     p.position.y = p.radius;
+    //     p.velocity.y *= -restitution;
+    //   } else if (p.position.y + p.radius >= world_height) {
+    //     p.position.y = world_height - p.radius;
+    //     p.velocity.y *= -restitution;
+    //   }
+    // }
   };
 
-  auto update = [&particles, &gravity, &wind, &liquid](const float dt, const input::InputState& input) {
-    for (auto& p : particles) {
-      p.add_force(gravity * p.mass);
+  auto read_input = [](const input::InputState& state, const input::InputEvents& events) {};
 
-      if (liquid.contains(p.position)) {
-        const math::Vec2 drag = physics::force::drag(p.velocity, 0.1f);
+  auto render = [&particle, &anchor](render::Framebuffer& fb) {
+    render::draw::line(fb,
+                       particle.position * pixels_per_meter,
+                       anchor.position * pixels_per_meter,
+                       render::color::white);
 
-        p.add_force(drag);
-      } else {
-        const math::Vec2 wind_drag = physics::force::drag(p.velocity - wind, 0.0005f);
+    render::draw::filled_circle(fb,
+                                particle.position * pixels_per_meter,
+                                particle.radius * pixels_per_meter,
+                                render::color::white);
 
-        p.add_force(wind_drag);
-      }
-    }
-
-    for (auto& p : particles) {
-      p.integrate(dt);
-    }
-
-    for (auto& p : particles) {
-      // Note: not real physics for now
-      constexpr float restitution = 0.9f;
-
-      if (p.position.x - p.radius <= 0) {
-        p.position.x = p.radius;
-        p.velocity.x *= -restitution;
-      } else if (p.position.x + p.radius >= world_width) {
-        p.position.x = world_width - p.radius;
-        p.velocity.x *= -restitution;
-      }
-
-      if (p.position.y - p.radius <= 0) {
-        p.position.y = p.radius;
-        p.velocity.y *= -restitution;
-      } else if (p.position.y + p.radius >= world_height) {
-        p.position.y = world_height - p.radius;
-        p.velocity.y *= -restitution;
-      }
-    }
-  };
-
-  auto read_input = [&particles](const input::InputState& state, const input::InputEvents& events) {
-    if (events.primary == input::Event::Pressed) {
-      const math::Vec2 pos = state.cursor_position / pixels_per_meter;
-
-      particles.emplace_back(physics::Particle(1, 1, pos));
-    }
-  };
-
-  auto render = [&particles](render::Framebuffer& fb) {
-    render::draw::rect(fb,
-                       {liquid.x_min * pixels_per_meter, liquid.y_min * pixels_per_meter},
-                       (liquid.x_max - liquid.x_min) * pixels_per_meter,
-                       (liquid.y_max - liquid.y_min) * pixels_per_meter,
-                       render::color::sky_blue);
-
-    for (auto& p : particles) {
-      render::draw::filled_circle(fb, p.position * pixels_per_meter, p.radius * pixels_per_meter, render::color::white);
-    }
+    render::draw::filled_circle(fb,
+                                anchor.position * pixels_per_meter,
+                                anchor.radius * pixels_per_meter,
+                                render::color::sky_blue);
   };
 
   return engine::run(app_config, read_input, update, render);
