@@ -81,6 +81,7 @@ setup_demo(basic-rendering basic_rendering TRUE)
 
 add_executable(physics_2d
         demos/physics_2d/physics_2d.cpp
+        demos/physics_2d/drawer.h
 )
 
 setup_demo(physics_2d physics_2d TRUE)

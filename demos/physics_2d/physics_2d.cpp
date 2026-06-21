@@ -1,3 +1,4 @@
+#include "drawer.h"
 #include "engine/run.h"
 #include "engine/sdl.h"
 #include "input/input.h"
@@ -23,20 +24,21 @@ int main(int argc, char* argv[]) {
 
   constexpr float pixels_per_meter = 10.0f;
 
+  Drawer drawer(pixels_per_meter);
+
   constexpr float world_width = settings.width / pixels_per_meter;
   constexpr float world_height = settings.height / pixels_per_meter;
 
-  const physics::Particle anchor(0, 1, {50, 20});
-  physics::Particle particle(1, 1, {50, 50});
+  bool is_holding = false;
+  math::Vec2 pointer;
+
+  const physics::Particle anchor(0, 1, {50, 50});
+  physics::Particle particle(1, 1, {50, 30});
 
   auto update = [&particle, &anchor](const float dt, const input::InputState& input) {
-    // particle.add_force(physics::force::spring(particle.position, anchor.position, 20, 2));
-    particle.add_force(physics::force::damped_spring(particle.position,
-                                                     anchor.position,
-                                                     particle.velocity - anchor.velocity,
-                                                     20,
-                                                     0.02,
-                                                     5));
+    particle.add_force(physics::force::spring(particle, anchor, {.rest_length = 20, .k = 5, .c = 0.1}));
+
+    particle.add_force(physics::force::gravity(particle.mass));
 
     particle.integrate(dt);
 
@@ -66,23 +68,38 @@ int main(int argc, char* argv[]) {
     // }
   };
 
-  auto read_input = [](const input::InputState& state, const input::InputEvents& events) {};
+  auto read_input = [&particle, &pointer, &is_holding](const input::InputState& state,
+                                                       const input::InputEvents& events) {
+    pointer = {.x = state.cursor_position.x / pixels_per_meter,
+               .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
-  auto render = [&particle, &anchor](render::Framebuffer& fb) {
-    render::draw::line(fb,
-                       particle.position * pixels_per_meter,
-                       anchor.position * pixels_per_meter,
-                       render::color::white);
+    if (events.primary == input::Event::Pressed) {
+      if ((pointer - particle.position).length() <= particle.radius) {
+        is_holding = true;
+      }
+    }
 
-    render::draw::filled_circle(fb,
-                                particle.position * pixels_per_meter,
-                                particle.radius * pixels_per_meter,
-                                render::color::white);
+    if (events.primary == input::Event::Released) {
+      if (is_holding) {
+        particle.velocity = particle.position - pointer;
+      }
 
-    render::draw::filled_circle(fb,
-                                anchor.position * pixels_per_meter,
-                                anchor.radius * pixels_per_meter,
-                                render::color::sky_blue);
+      is_holding = false;
+    }
+  };
+
+  auto render = [&particle, &anchor, &is_holding, &pointer, &drawer](render::Framebuffer& fb) {
+    if (is_holding) {
+      drawer.line(fb, particle.position, pointer, render::color::red);
+    }
+
+    drawer.filled_circle(fb, pointer, 1, render::color::red);
+
+    drawer.line(fb, particle.position, anchor.position, render::color::white);
+
+    drawer.filled_circle(fb, particle.position, particle.radius, render::color::white);
+
+    drawer.filled_circle(fb, anchor.position, anchor.radius, render::color::sky_blue);
   };
 
   return engine::run(app_config, read_input, update, render);
