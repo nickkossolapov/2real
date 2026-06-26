@@ -36,6 +36,17 @@ public:
     render::draw::filled_circle(fb, to_screen(fb, center), radius * pixels_per_meter_, color);
   }
 
+  void debug_circle(render::Framebuffer& fb,
+                    const math::Vec2& center,
+                    const float radius,
+                    const float angle,
+                    const uint32_t color) const {
+    const math::Vec2 edge_point = math::Vec2{std::sin(angle), std::cos(angle)} * radius;
+
+    render::draw::circle(fb, to_screen(fb, center), radius * pixels_per_meter_, color);
+    render::draw::line(fb, to_screen(fb, center), to_screen(fb, center + edge_point), color);
+  }
+
 private:
   math::Vec2 to_screen(const render::Framebuffer& fb, const math::Vec2& world) const {
     return {world.x * pixels_per_meter_, fb.height() - world.y * pixels_per_meter_};

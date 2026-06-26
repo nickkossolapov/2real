@@ -186,6 +186,17 @@ std::vector<int> get_circle_edge_points(const int radius) {
   return extents;
 }
 
+void draw_circle_octants(Framebuffer& fb, const Vec2i& center, const int x, const int y, const uint32_t color) {
+  fb.draw_pixel(center.x + x, center.y + y, color);
+  fb.draw_pixel(center.x - x, center.y + y, color);
+  fb.draw_pixel(center.x + x, center.y - y, color);
+  fb.draw_pixel(center.x - x, center.y - y, color);
+  fb.draw_pixel(center.x + y, center.y + x, color);
+  fb.draw_pixel(center.x - y, center.y + x, color);
+  fb.draw_pixel(center.x + y, center.y - x, color);
+  fb.draw_pixel(center.x - y, center.y - x, color);
+}
+
 } // namespace
 
 void rect(Framebuffer& fb, const math::Vec2& top_left, const int w, const int h, const uint32_t color) {
@@ -249,6 +260,31 @@ void textured_triangle(Framebuffer& fb, const std::array<TexturedVertex, 3>& ver
   };
 
   triangle(fb, v, pixel_fn);
+}
+
+void circle(Framebuffer& fb, const math::Vec2& center, const float radius, const uint32_t color) {
+  const Vec2i center_i = {.x = math::round_to_int(center.x), .y = math::round_to_int(center.y)};
+  const int radius_i = math::round_to_int(radius);
+
+  if (radius_i < 0) {
+    return;
+  }
+
+  int x = radius_i;
+  int y = 0;
+  int error = 1 - radius_i;
+
+  while (x >= y) {
+    draw_circle_octants(fb, center_i, x, y, color);
+    ++y;
+
+    if (error < 0) {
+      error += 2 * y + 1;
+    } else {
+      --x;
+      error += 2 * (y - x) + 1;
+    }
+  }
 }
 
 void filled_circle(Framebuffer& fb, const math::Vec2& center, const float radius, const uint32_t color) {

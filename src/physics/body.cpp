@@ -2,10 +2,7 @@
 
 namespace physics {
 
-Body::Body(const float m,
-           const std::variant<shape::Circle, shape::Polygon>& shape,
-           const math::Vec2 pos,
-           const float rot)
+Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float rot)
     : position(pos),
       rotation(rot),
       mass(m > 0.0f ? m : 0.0f),
@@ -25,7 +22,7 @@ void Body::integrate(const float dt) {
   angular_velocity += angular_acceleration * dt;
   rotation += angular_velocity;
 
-  reset_forces();
+  reset();
 }
 
 void Body::add_force(const math::Vec2 force) {
@@ -36,8 +33,9 @@ void Body::add_torque(const float torque) {
   net_torque_ += torque;
 }
 
-void Body::reset_forces() {
+void Body::reset() {
   net_force_ = {};
+  net_torque_ = 0;
 }
 
 } // namespace physics

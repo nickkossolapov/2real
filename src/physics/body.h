@@ -32,7 +32,7 @@ private:
   math::Vec2 net_force_;
   float net_torque_ = 0.0f;
 
-  void reset_forces();
+  void reset();
 };
 
 } // namespace physics

@@ -10,6 +10,38 @@
 
 #include <set>
 
+namespace {
+
+math::Vec2 to_world(const math::Vec2 center, const math::Vec2 local, const float a) {
+  // left-handed rotation matrix
+  const float x = std::cos(a) * local.x + std::sin(a) * local.y;
+  const float y = -std::sin(a) * local.x + std::cos(a) * local.y;
+
+  return center + math::Vec2{x, y};
+}
+
+void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::Body& body) {
+  auto visitor = Overloaded{
+      [&](const physics::shape::Circle& c) {
+        drawer.debug_circle(fb, body.position, c.radius, body.rotation, render::color::white);
+      },
+      [&](const physics::shape::Box& b) {
+        for (int i = 0; i < 4; ++i) {
+          const int next = (i + 1) % 4;
+
+          drawer.line(fb,
+                      to_world(body.position, b.points[i], body.rotation),
+                      to_world(body.position, b.points[next], body.rotation),
+                      render::color::white);
+        }
+      },
+  };
+
+  return std::visit(visitor, body.shape);
+}
+
+} // namespace
+
 int main(int argc, char* argv[]) {
   constexpr engine::SdlSettings settings{
       .width = 960,
@@ -23,7 +55,7 @@ int main(int argc, char* argv[]) {
       .background = render::color::near_black,
   };
 
-  constexpr float pixels_per_meter = 10.0f;
+  constexpr float pixels_per_meter = 20.0f;
 
   Drawer drawer(pixels_per_meter);
 
@@ -35,63 +67,20 @@ int main(int argc, char* argv[]) {
   math::Vec2 pointer;
 
   std::vector<physics::Body> bodies{};
-  std::set<std::pair<int, int>> connections{};
 
-  constexpr int width = 8;
-  constexpr int height = 8;
-  constexpr float x_pitch = 5.0f;
-  constexpr float y_pitch = 5.0f;
-  constexpr float y0 = 25.0f;
-  constexpr float x0 = 25.0f;
+  bodies.emplace_back(1.0f, physics::shape::Circle(2.0f));
+  physics::Body& circle = bodies[0];
+  circle.position = {20, 20};
+  circle.add_torque(1.0f);
 
-  for (int x = 0; x < width; ++x) {
-    for (int y = 0; y < height; ++y) {
-      const math::Vec2 pos{.x = x0 + x * x_pitch, .y = y0 + y * y_pitch};
+  bodies.emplace_back(1.0f, physics::shape::Box(3.0f, 2.0f));
+  physics::Body& box = bodies[1];
+  box.position = {10, 20};
+  box.add_torque(1.0f);
 
-      // const float mass = (y + 1) == height && (x == 0 || (x + 1) == width) ? 0 : 0.1f;
-      const float mass = (y + 1) == height ? 0 : 0.5f;
-      // const float mass = x == 0 ? 0 : 0.05f;
-      // constexpr float mass = 0.1f;
-
-      bodies.emplace_back(physics::Body(mass, physics::shape::Circle{}, pos));
-    }
-  }
-
-  for (int x = 0; x < width; ++x) {
-    for (int y = 0; y < height; ++y) {
-      const int current = y * height + x;
-      const int next_row = (y + 1) * height + x;
-
-      const bool top = y + 1 == width;
-      const bool right = x + 1 == height;
-      const bool left = x == 0;
-
-      if (!right)
-        connections.emplace(current, current + 1);
-      if (!top)
-        connections.emplace(current, next_row);
-      if (!top && !right)
-        connections.emplace(current, next_row + 1);
-      if (!top && !left)
-        connections.emplace(current, next_row - 1);
-    }
-  }
-
-  auto update = [&bodies, &connections](const float dt, const input::InputState& input) {
-    constexpr physics::force::SpringParams spring_params{.rest_length = 6, .k = 1, .c = 2};
-
-    for (auto& [a_index, b_index] : connections) {
-      auto& a = bodies[a_index];
-      auto& b = bodies[b_index];
-
-      const math::Vec2 force = physics::force::spring(a, b, spring_params);
-
-      a.add_force(force);
-      b.add_force(-force);
-    }
-
+  auto update = [&bodies](const float dt, const input::InputState& input) {
     for (auto& body : bodies) {
-      body.add_force(physics::force::gravity(body.mass));
+      // body.add_force(physics::force::gravity(body.mass));
     }
 
     for (auto& body : bodies) {
@@ -103,21 +92,21 @@ int main(int argc, char* argv[]) {
       constexpr float restitution = 0.9f;
 
       if (std::holds_alternative<physics::shape::Circle>(body.shape)) {
-        auto circle = std::get<physics::shape::Circle>(body.shape);
+        auto [radius] = std::get<physics::shape::Circle>(body.shape);
 
-        if (body.position.x - circle.radius <= 0) {
-          body.position.x = circle.radius;
+        if (body.position.x - radius <= 0) {
+          body.position.x = radius;
           body.velocity.x *= -restitution;
-        } else if (body.position.x + circle.radius >= world_width) {
-          body.position.x = world_width - circle.radius;
+        } else if (body.position.x + radius >= world_width) {
+          body.position.x = world_width - radius;
           body.velocity.x *= -restitution;
         }
 
-        if (body.position.y - circle.radius <= 0) {
-          body.position.y = circle.radius;
+        if (body.position.y - radius <= 0) {
+          body.position.y = radius;
           body.velocity.y *= -restitution;
-        } else if (body.position.y + circle.radius >= world_height) {
-          body.position.y = world_height - circle.radius;
+        } else if (body.position.y + radius >= world_height) {
+          body.position.y = world_height - radius;
           body.velocity.y *= -restitution;
         }
       }
@@ -150,19 +139,13 @@ int main(int argc, char* argv[]) {
     }
   };
 
-  auto render = [&bodies, &connections, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
+  auto render = [&bodies, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
     if (is_holding) {
       drawer.line(fb, bodies[held_particle].position, pointer, render::color::red);
     }
 
-    drawer.filled_circle(fb, pointer, 1, render::color::red);
-
-    for (auto& [a, b] : connections) {
-      drawer.line(fb, bodies[a].position, bodies[b].position, render::color::white);
-    }
-
-    for (auto& p : bodies) {
-      drawer.filled_circle(fb, p.position, 1, render::color::white);
+    for (auto& body : bodies) {
+      render_body(drawer, fb, body);
     }
   };
 
