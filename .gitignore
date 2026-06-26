@@ -7,6 +7,7 @@ docs/.obsidian/plugins/
 .idea/workspace.xml
 .idea/codeStyles/codeStyleConfig.xml
 .idea/.gitignore
+.idea/shelf
 
 # Packages
 vcpkg_installed/

@@ -25,8 +25,8 @@ add_library(
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
-        src/physics/particle.cpp
-        src/physics/particle.h
+        src/physics/body.cpp
+        src/physics/body.h
         src/render/clipping.cpp
         src/render/clipping.h
         src/render/color.h
@@ -50,6 +50,8 @@ add_library(
         src/scene/scene.h
         src/physics/force.h
         src/physics/force.cpp
+        src/physics/shape.h
+        src/util/overload.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

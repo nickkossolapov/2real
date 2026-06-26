@@ -1,7 +1,7 @@
 #include "force.h"
 
+#include "body.h"
 #include "math/common.h"
-#include "particle.h"
 
 namespace physics::force {
 
@@ -13,7 +13,7 @@ math::Vec2 friction(const math::Vec2& velocity, const float k) {
   return -velocity * k;
 }
 
-math::Vec2 spring(const Particle& a, const Particle& b, const SpringParams params) {
+math::Vec2 spring(const Body& a, const Body& b, const SpringParams params) {
   const math::Vec2 displacement = b.position - a.position;
   const math::Vec2 relative_velocity = a.velocity - b.velocity;
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "body.h"
 #include "math/vec2.h"
-#include "particle.h"
 
 namespace physics::force {
 
@@ -13,7 +13,7 @@ struct SpringParams {
 
 math::Vec2 drag(const math::Vec2& velocity, float k);
 math::Vec2 friction(const math::Vec2& velocity, float k);
-math::Vec2 spring(const Particle& a, const Particle& b, SpringParams params);
+math::Vec2 spring(const Body& a, const Body& b, SpringParams params);
 math::Vec2 gravity(float mass, float g = 9.81);
 
 } // namespace physics::force
