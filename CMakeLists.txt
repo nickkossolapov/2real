@@ -52,6 +52,10 @@ add_library(
         src/physics/force.cpp
         src/physics/shape.h
         src/util/overload.h
+        src/physics/collision.h
+        src/physics/collision.cpp
+        src/physics/transform.h
+        src/physics/contact.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
