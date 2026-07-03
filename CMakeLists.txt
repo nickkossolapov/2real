@@ -56,6 +56,8 @@ add_library(
         src/physics/collision.cpp
         src/physics/transform.h
         src/physics/contact.h
+        src/physics/resolution.h
+        src/physics/resolution.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

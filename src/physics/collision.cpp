@@ -17,10 +17,7 @@ std::optional<Contact> test_circle_circle(const Body& a, const Body& b) {
     return {};
   }
 
-  Contact contact{
-      .a = a,
-      .b = b,
-  };
+  Contact contact;
 
   contact.normal = ab.normalized();
   contact.start = b.position - contact.normal * b_radius;

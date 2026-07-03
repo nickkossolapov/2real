@@ -12,6 +12,10 @@ Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float 
       inv_inertia(inertia > 0.0f ? 1.0f / inertia : 1.0f) {}
 
 void Body::integrate(const float dt) {
+  if (is_static()) {
+    return;
+  }
+
   const math::Vec2 acceleration = net_force_ * inv_mass;
 
   velocity += acceleration * dt;
@@ -31,6 +35,13 @@ void Body::add_force(const math::Vec2 force) {
 
 void Body::add_torque(const float torque) {
   net_torque_ += torque;
+}
+void Body::add_impulse(const math::Vec2 j) {
+  if (is_static()) {
+    return;
+  }
+
+  velocity += j * inv_mass;
 }
 
 void Body::reset() {
