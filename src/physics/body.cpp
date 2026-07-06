@@ -24,7 +24,7 @@ void Body::integrate(const float dt) {
   const float angular_acceleration = net_torque_ * inv_inertia;
 
   angular_velocity += angular_acceleration * dt;
-  rotation += angular_velocity;
+  rotation += angular_velocity * dt;
 
   reset();
 }

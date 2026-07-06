@@ -58,6 +58,9 @@ struct Vec2 {
 
     return {x / length, y / length};
   }
+
+  /// Right-perpendicular
+  Vec2 perpendicular() const { return Vec2(y, -x).normalized(); }
 };
 
 inline float dot(const Vec2& v1, const Vec2& v2) {
