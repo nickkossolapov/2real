@@ -70,11 +70,12 @@ int main(int argc, char* argv[]) {
 
   std::vector<physics::Body> bodies{};
 
-  bodies.emplace_back(1.0f, physics::shape::box(4.0f, 4.0f), math::Vec2{30.0f, 18.0f});
-  bodies.emplace_back(1.0f, physics::shape::box(4.0f, 4.0f), math::Vec2{10.0f, 18.0f});
+  bodies.emplace_back(1.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
+  bodies.emplace_back(1.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{10.0f, 18.0f});
 
-  bodies[0].angular_velocity = 0.1f;
-  bodies[1].angular_velocity = 0.4f;
+  // bodies[0].angular_velocity = 0.1f;
+  bodies[0].rotation = 1.0f;
+  // bodies[1].angular_velocity = 0.4f;
 
   std::optional<physics::Contact> contact;
 
@@ -145,11 +146,11 @@ int main(int argc, char* argv[]) {
 
     const uint32_t color = contact.has_value() ? render::color::red : render::color::white;
 
-    // if (contact.has_value()) {
-    //   drawer.filled_circle(fb, contact->start, 0.2, render::color::red);
-    //   drawer.filled_circle(fb, contact->end, 0.2, render::color::red);
-    //   drawer.line(fb, contact->start, contact->start + contact->normal, render::color::white);
-    // }
+    if (contact.has_value()) {
+      drawer.filled_circle(fb, contact->start, 0.2, render::color::red);
+      drawer.filled_circle(fb, contact->end, 0.2, render::color::red);
+      drawer.line(fb, contact->start, contact->start + contact->normal, render::color::white);
+    }
 
     for (auto& body : bodies) {
       render_body(drawer, fb, body, color);

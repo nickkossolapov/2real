@@ -43,21 +43,36 @@ std::vector<math::Vec2> to_world(const math::Vec2 position, const std::vector<ma
   return world_points;
 }
 
-float find_min_separation(const std::vector<math::Vec2>& a, const std::vector<math::Vec2>& b) {
-  float separation = std::numeric_limits<float>::lowest();
+struct PolygonSeparation {
+  float distance;
+  math::Vec2 axis;
+  math::Vec2 point;
+};
+
+PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const std::vector<math::Vec2>& b) {
+  PolygonSeparation separation = {.distance = std::numeric_limits<float>::lowest()};
 
   for (int i = 0; i < a.size(); ++i) {
     const int next = (i + 1) % a.size();
     math::Vec2 edge = (a[next] - a[i]).perpendicular();
 
     float min_sep = std::numeric_limits<float>::max();
+    math::Vec2 min_vertex;
 
     for (int j = 0; j < b.size(); ++j) {
-      float projection = dot(b[j] - a[i], edge);
-      min_sep = std::min(projection, min_sep);
+      const float projection = dot(b[j] - a[i], edge);
+
+      if (projection < min_sep) {
+        min_sep = projection;
+        min_vertex = b[j];
+      }
     }
 
-    separation = std::max(separation, min_sep);
+    if (min_sep > separation.distance) {
+      separation.distance = min_sep;
+      separation.axis = (a[next] - a[i]).normalized();
+      separation.point = min_vertex;
+    }
   }
 
   return separation;
@@ -70,26 +85,36 @@ std::optional<Contact> test_polygon_polygon(const Body& a, const Body& b) {
   const auto a_points = to_world(a.position, a_shape.points, a.rotation);
   const auto b_points = to_world(b.position, b_shape.points, b.rotation);
 
-  if (find_min_separation(a_points, b_points) >= 0 || find_min_separation(b_points, a_points) >= 0) {
+  const auto ab_separation = find_min_separation(a_points, b_points);
+
+  if (ab_separation.distance >= 0) {
     return {};
   }
 
+  const auto ba_separation = find_min_separation(b_points, a_points);
+
+  if (ba_separation.distance >= 0) {
+    return {};
+  }
+
+  if (ab_separation.distance > ba_separation.distance) {
+    return Contact{
+        .start = ab_separation.point,
+        .end = ab_separation.point - ab_separation.axis.perpendicular() * ab_separation.distance,
+        .normal = ab_separation.axis.perpendicular(),
+        .depth = -ab_separation.distance,
+    };
+  }
+
   return Contact{
-      {0, 0},
-      {0, 0},
-      {0, 0},
-      0,
+      .start = ba_separation.point - ba_separation.axis.perpendicular() * ba_separation.distance,
+      .end = ba_separation.point,
+      .normal = -ba_separation.axis.perpendicular(),
+      .depth = -ba_separation.distance,
   };
 }
 
 std::optional<Contact> test(const shape::Circle& a, const Transform a_t, const shape::Polygon& b, const Transform b_t) {
-  return {};
-}
-
-std::optional<Contact> test(const shape::Polygon& a,
-                            const Transform a_t,
-                            const shape::Polygon& b,
-                            const Transform b_t) {
   return {};
 }
 
