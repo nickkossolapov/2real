@@ -54,7 +54,7 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
 
   for (int i = 0; i < a.size(); ++i) {
     const int next = (i + 1) % a.size();
-    math::Vec2 edge = (a[next] - a[i]).perpendicular();
+    math::Vec2 edge = (a[next] - a[i]).perpendicular().normalized();
 
     float min_sep = std::numeric_limits<float>::max();
     math::Vec2 min_vertex;
@@ -100,16 +100,16 @@ std::optional<Contact> test_polygon_polygon(const Body& a, const Body& b) {
   if (ab_separation.distance > ba_separation.distance) {
     return Contact{
         .start = ab_separation.point,
-        .end = ab_separation.point - ab_separation.axis.perpendicular() * ab_separation.distance,
-        .normal = ab_separation.axis.perpendicular(),
+        .end = ab_separation.point - ab_separation.axis.perpendicular().normalized() * ab_separation.distance,
+        .normal = ab_separation.axis.perpendicular().normalized(),
         .depth = -ab_separation.distance,
     };
   }
 
   return Contact{
-      .start = ba_separation.point - ba_separation.axis.perpendicular() * ba_separation.distance,
+      .start = ba_separation.point - ba_separation.axis.perpendicular().normalized() * ba_separation.distance,
       .end = ba_separation.point,
-      .normal = -ba_separation.axis.perpendicular(),
+      .normal = -ba_separation.axis.perpendicular().normalized(),
       .depth = -ba_separation.distance,
   };
 }

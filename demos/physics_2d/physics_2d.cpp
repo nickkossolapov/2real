@@ -46,8 +46,8 @@ void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::B
 
 int main(int argc, char* argv[]) {
   constexpr engine::SdlSettings settings{
-      .width = 960,
-      .height = 720,
+      .width = 1000,
+      .height = 800,
       .scale = 1,
       .enable_v_sync = true,
   };
@@ -70,22 +70,15 @@ int main(int argc, char* argv[]) {
 
   std::vector<physics::Body> bodies{};
 
-  bodies.emplace_back(1.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
-  bodies.emplace_back(1.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{10.0f, 18.0f});
+  bodies.emplace_back(0.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
+  bodies.emplace_back(0.0f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f});
 
-  // bodies[0].angular_velocity = 0.1f;
-  bodies[0].rotation = 1.0f;
-  // bodies[1].angular_velocity = 0.4f;
+  bodies[0].rotation = 1.4f;
 
-  std::optional<physics::Contact> contact;
-
-  auto update = [&bodies, &contact](const float dt, const input::InputState& input) {
-    // constexpr math::Vec2 wind = {10, 0};
-    //
-    // for (auto& body : bodies) {
-    //   body.add_force(physics::force::gravity(body.mass));
-    //   body.add_force(physics::force::friction(body.velocity, 0.003));
-    // }
+  auto update = [&bodies](const float dt, const input::InputState& input) {
+    for (auto& body : bodies) {
+      body.add_force(physics::force::gravity(body.mass));
+    }
 
     for (auto& body : bodies) {
       body.integrate(dt);
@@ -96,12 +89,8 @@ int main(int argc, char* argv[]) {
         auto& a = bodies[i];
         auto& b = bodies[j];
 
-        contact.reset();
-
         if (auto c = physics::collision::test(a, b)) {
-          contact.emplace(*c);
-
-          // physics::resolution::resolve(a, b, *c);
+          physics::resolution::resolve(a, b, *c);
         }
       }
     }
@@ -112,48 +101,22 @@ int main(int argc, char* argv[]) {
     pointer = {.x = state.cursor_position.x / pixels_per_meter,
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
-    // if (events.primary == input::Event::Pressed) {
-    //   for (int i = 0; i < bodies.size(); ++i) {
-    //     const auto p = bodies[i];
-    //
-    //     auto [radius] = std::get<physics::shape::Circle>(p.shape);
-    //
-    //     if ((pointer - p.position).length() <= radius) {
-    //       is_holding = true;
-    //       held_particle = i;
-    //       break;
-    //     }
-    //   }
-    // }
-
-    if (state.primary == input::ButtonState::Down) {
-      bodies[0].position = pointer;
+    if (events.primary == input::Event::Released) {
+      // bodies.emplace_back(0.0f, physics::shape::Circle(1.0f), pointer);
     }
 
-    if (events.primary == input::Event::Released) {
-      if (is_holding) {
-        bodies[held_particle].velocity = pointer - bodies[held_particle].position;
-      }
-
-      is_holding = false;
+    if (events.secondary == input::Event::Released) {
+      bodies.emplace_back(0.5f, physics::shape::box(2.0f, 2.0f), pointer);
     }
   };
 
-  auto render = [&bodies, &is_holding, &held_particle, &pointer, &drawer, &contact](render::Framebuffer& fb) {
+  auto render = [&bodies, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
     if (is_holding) {
       drawer.line(fb, bodies[held_particle].position, pointer, render::color::red);
     }
 
-    const uint32_t color = contact.has_value() ? render::color::red : render::color::white;
-
-    if (contact.has_value()) {
-      drawer.filled_circle(fb, contact->start, 0.2, render::color::red);
-      drawer.filled_circle(fb, contact->end, 0.2, render::color::red);
-      drawer.line(fb, contact->start, contact->start + contact->normal, render::color::white);
-    }
-
     for (auto& body : bodies) {
-      render_body(drawer, fb, body, color);
+      render_body(drawer, fb, body, render::color::white);
     }
   };
 

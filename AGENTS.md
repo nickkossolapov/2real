@@ -58,6 +58,27 @@ feature. The line is: don't write the part I'm here to figure out myself.
 * When suggesting an alternative, note the trade-off and whether the convention is widespread or just one option — don't
   push a rename for its own sake.
 
+## Math and Coordinate Conventions
+
+* Rotational quantities follow the **renderer's convention: left-handed, clockwise-positive about `+z`** (see
+  `docs/notes/coordinate-system.md`), even in the current 2D code. This is verified in the implementation: `mat4.h`'s
+  `rotation_z` uses a column-vector `out = M * v` form, and acting on `+x = (1,0)` produces `(cosθ, -sinθ)` — for small
+  positive θ the `+x` axis moves toward `-y`, i.e. clockwise in the y-up engine frame. (The SDL y-flip makes this *look*
+  counter-clockwise on screen; judge the convention in engine space, not on screen.)
+* The physics must match this so that `rotation += angular_velocity * dt` feeds `R_z` correctly. Concretely, the
+  derivative of `rotation_z(θ)` at θ=0 is the point-velocity generator `perpendicular(r) = (r.y, -r.x)`, which pins down:
+  * Velocity of a point on a body: `v_p = v + angular_velocity * perpendicular(r)` (use `perpendicular()`, the right/CW
+    perpendicular `(y, -x)` — **not** its negation).
+  * Angular impulse: `Δω = cross(j, r) * inv_inertia` in `Body::add_impulse` — order is `cross(j, r)`, **not**
+    `cross(r, j)`. This is the generalized impulse conjugate to θ, `j · perpendicular(r)`. It is the opposite order from
+    the standard right-hand-rule `r × j` seen in CCW references like the Pikuma course.
+* These two are a matched pair. Flag any code that mixes them (e.g. `perpendicular()` in the velocity term alongside
+  `cross(r, j)` in the impulse) as a bug: the mismatch turns the impulse solver into a positive-feedback loop and bodies
+  spin wildly on contact, even though each half looks locally reasonable.
+* When the engine moves to 3D, the 2D scalar `ω` becomes the `z` component of a `Vec3` angular velocity in this same
+  left-handed convention, and the scalar `cross`/`perpendicular` helpers generalize to the full 3D cross product and
+  inertia tensor — no sign flips required.
+
 ## Coding Standards
 
 * Target good, modern C++. Prefer clear, idiomatic constructs and standard-library facilities over hand-rolled

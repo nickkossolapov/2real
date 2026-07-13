@@ -33,7 +33,7 @@ using Shape = std::variant<shape::Circle, shape::Polygon>;
 inline float compute_moment_of_inertia(const Shape& shape, const float mass) {
   auto visitor = Overloaded{
       [&](const shape::Circle& c) { return 0.5f * mass * c.radius * c.radius; },
-      [&](const shape::Polygon& p) { return 0.0f; },
+      [&](const shape::Polygon& p) { return 0.666f * mass; }, // hardcoded to 2m^2 squares for now
   };
 
   return std::visit(visitor, shape);

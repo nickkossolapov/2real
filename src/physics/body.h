@@ -25,11 +25,13 @@ struct Body {
   const float restitution = 1;
 
   explicit Body(float m, const Shape& shape, math::Vec2 pos = {}, float rot = 0);
+  explicit Body(float m, float restitution, const Shape& shape, math::Vec2 pos = {}, float rot = 0);
 
   void integrate(float dt);
   void add_force(math::Vec2 force);
   void add_torque(float torque);
   void add_impulse(math::Vec2 j);
+  void add_impulse(math::Vec2 j, math::Vec2 r);
 
   bool is_static() const { return inv_mass < math::epsilon; };
 

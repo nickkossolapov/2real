@@ -3,13 +3,17 @@
 namespace physics {
 
 Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float rot)
+    : Body(m, 1.0f, shape, pos, rot) {}
+
+Body::Body(const float m, const float restitution, const Shape& shape, const math::Vec2 pos, const float rot)
     : position(pos),
       rotation(rot),
       mass(m > 0.0f ? m : 0.0f),
       inv_mass(m > 0.0f ? 1.0f / m : 0.0f),
       shape(shape),
       inertia(compute_moment_of_inertia(shape, mass)),
-      inv_inertia(inertia > 0.0f ? 1.0f / inertia : 1.0f) {}
+      inv_inertia(inertia > 0.0f ? 1.0f / inertia : 0.0f),
+      restitution(restitution) {}
 
 void Body::integrate(const float dt) {
   if (is_static()) {
@@ -42,6 +46,15 @@ void Body::add_impulse(const math::Vec2 j) {
   }
 
   velocity += j * inv_mass;
+}
+
+void Body::add_impulse(const math::Vec2 j, const math::Vec2 r) {
+  if (is_static()) {
+    return;
+  }
+
+  velocity += j * inv_mass;
+  angular_velocity += math::cross(j, r) * inv_inertia;
 }
 
 void Body::reset() {
