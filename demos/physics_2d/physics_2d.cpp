@@ -24,7 +24,7 @@ math::Vec2 to_world(const math::Vec2 center, const math::Vec2 local, const float
 
 void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::Body& body, uint32_t color) {
   auto visitor = Overloaded{
-      [&](const physics::shape::Circle& c) { drawer.filled_circle(fb, body.position, c.radius, color); },
+      [&](const physics::shape::Circle& c) { drawer.debug_circle(fb, body.position, c.radius, body.rotation, color); },
       [&](const physics::shape::Polygon& p) {
         const int count = p.points.capacity();
 
@@ -70,8 +70,9 @@ int main(int argc, char* argv[]) {
 
   std::vector<physics::Body> bodies{};
 
-  bodies.emplace_back(0.0f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
-  bodies.emplace_back(0.0f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f});
+  bodies.emplace_back(0.0f, 0.5f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
+  bodies.emplace_back(0.0f, 0.5f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f});
+  bodies.emplace_back(0.0f, 0.8f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f});
 
   bodies[0].rotation = 1.4f;
 
@@ -102,11 +103,11 @@ int main(int argc, char* argv[]) {
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
     if (events.primary == input::Event::Released) {
-      // bodies.emplace_back(0.0f, physics::shape::Circle(1.0f), pointer);
+      bodies.emplace_back(1.0f, 0.8f, physics::shape::Circle(1.0f), pointer);
     }
 
     if (events.secondary == input::Event::Released) {
-      bodies.emplace_back(0.5f, physics::shape::box(2.0f, 2.0f), pointer);
+      bodies.emplace_back(1.0f, 0.8f, physics::shape::box(2.0f, 2.0f), pointer);
     }
   };
 

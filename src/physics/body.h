@@ -22,10 +22,12 @@ struct Body {
   const float inertia;
   const float inv_inertia;
 
-  const float restitution = 1;
+  const float restitution;
+  const float friction;
 
   explicit Body(float m, const Shape& shape, math::Vec2 pos = {}, float rot = 0);
   explicit Body(float m, float restitution, const Shape& shape, math::Vec2 pos = {}, float rot = 0);
+  explicit Body(float m, float restitution, float friction, const Shape& shape, math::Vec2 pos = {}, float rot = 0);
 
   void integrate(float dt);
   void add_force(math::Vec2 force);

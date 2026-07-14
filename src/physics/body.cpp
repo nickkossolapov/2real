@@ -3,9 +3,17 @@
 namespace physics {
 
 Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float rot)
-    : Body(m, 1.0f, shape, pos, rot) {}
+    : Body(m, 0.0f, shape, pos, rot) {}
 
 Body::Body(const float m, const float restitution, const Shape& shape, const math::Vec2 pos, const float rot)
+    : Body(m, restitution, 0.2f, shape, pos, rot) {}
+
+Body::Body(const float m,
+           const float restitution,
+           const float friction,
+           const Shape& shape,
+           const math::Vec2 pos,
+           const float rot)
     : position(pos),
       rotation(rot),
       mass(m > 0.0f ? m : 0.0f),
@@ -13,7 +21,8 @@ Body::Body(const float m, const float restitution, const Shape& shape, const mat
       shape(shape),
       inertia(compute_moment_of_inertia(shape, mass)),
       inv_inertia(inertia > 0.0f ? 1.0f / inertia : 0.0f),
-      restitution(restitution) {}
+      restitution(restitution),
+      friction(friction) {}
 
 void Body::integrate(const float dt) {
   if (is_static()) {
