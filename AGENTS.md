@@ -66,18 +66,28 @@ feature. The line is: don't write the part I'm here to figure out myself.
   positive θ the `+x` axis moves toward `-y`, i.e. clockwise in the y-up engine frame. (The SDL y-flip makes this *look*
   counter-clockwise on screen; judge the convention in engine space, not on screen.)
 * The physics must match this so that `rotation += angular_velocity * dt` feeds `R_z` correctly. Concretely, the
-  derivative of `rotation_z(θ)` at θ=0 is the point-velocity generator `perpendicular(r) = (r.y, -r.x)`, which pins down:
-  * Velocity of a point on a body: `v_p = v + angular_velocity * perpendicular(r)` (use `perpendicular()`, the right/CW
-    perpendicular `(y, -x)` — **not** its negation).
+  derivative of `rotation_z(θ)` at θ=0 is the point-velocity generator `right_perpendicular(r) = (r.y, -r.x)`, which pins
+  down:
+  * Velocity of a point on a body: `v_p = v + angular_velocity * right_perpendicular(r)` (use `right_perpendicular()`,
+    the right/CW perpendicular `(y, -x)` — **not** its negation, and **not** `normal()`).
   * Angular impulse: `Δω = cross(j, r) * inv_inertia` in `Body::add_impulse` — order is `cross(j, r)`, **not**
-    `cross(r, j)`. This is the generalized impulse conjugate to θ, `j · perpendicular(r)`. It is the opposite order from
-    the standard right-hand-rule `r × j` seen in CCW references like the Pikuma course.
-* These two are a matched pair. Flag any code that mixes them (e.g. `perpendicular()` in the velocity term alongside
-  `cross(r, j)` in the impulse) as a bug: the mismatch turns the impulse solver into a positive-feedback loop and bodies
-  spin wildly on contact, even though each half looks locally reasonable.
+    `cross(r, j)`. This is the generalized impulse conjugate to θ, `j · right_perpendicular(r)`. It is the opposite order
+    from the standard right-hand-rule `r × j` seen in CCW references like the Pikuma course.
+* These two are a matched pair. Flag any code that mixes them (e.g. `right_perpendicular()` in the velocity term
+  alongside `cross(r, j)` in the impulse) as a bug: the mismatch turns the impulse solver into a positive-feedback loop
+  and bodies spin wildly on contact, even though each half looks locally reasonable.
+* **Polygon face normals are a separate, opposite helper.** `Vec2::normal()` returns `(-y, x)`, the **outward** normal of
+  a CW-wound edge `(v_next - v_i)`. Because the engine winds polygons clockwise *and* rotates clockwise-positive, the
+  outward face normal and the `ω × r` point-velocity generator are opposite perpendiculars — this is why they are two
+  distinct methods (`normal()` vs `right_perpendicular()`) rather than one `perpendicular()`. Box2D has the same split
+  (`b2Cross(edge, 1)` for the normal, `b2Cross(w, r)` for point velocity); the signs are mirrored here only because 2real
+  is CW where Box2D is CCW. Use `normal()` for SAT axes, contact normals, and point-in-polygon tests; a contact normal
+  built from `normal()` already points out of the reference polygon (A→B) with no extra sign flip. Never use
+  `right_perpendicular()` as a face normal or `normal()` in the velocity/impulse terms.
 * When the engine moves to 3D, the 2D scalar `ω` becomes the `z` component of a `Vec3` angular velocity in this same
-  left-handed convention, and the scalar `cross`/`perpendicular` helpers generalize to the full 3D cross product and
-  inertia tensor — no sign flips required.
+  left-handed convention, and the scalar `cross`/`right_perpendicular`/`normal` helpers generalize to the full 3D cross
+  product and inertia tensor — no sign flips required, and the normal-vs-perpendicular ambiguity disappears entirely
+  (surface normals become a true 3D cross of two edges).
 
 ## Coding Standards
 

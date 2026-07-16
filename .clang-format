@@ -16,3 +16,4 @@ MaxEmptyLinesToKeep: 1
 SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
 PenaltyReturnTypeOnItsOwnLine: 1000
+BreakBeforeBinaryOperators: NonAssignment

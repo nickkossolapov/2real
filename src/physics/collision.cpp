@@ -45,7 +45,7 @@ std::vector<math::Vec2> to_world(const math::Vec2 position, const std::vector<ma
 
 struct PolygonSeparation {
   float distance;
-  math::Vec2 axis;
+  math::Vec2 axis; // unit outward normal of the reference face (points out of polygon `a`)
   math::Vec2 point;
 };
 
@@ -54,13 +54,13 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
 
   for (int i = 0; i < a.size(); ++i) {
     const int next = (i + 1) % a.size();
-    math::Vec2 edge = (a[next] - a[i]).perpendicular().normalized();
+    const math::Vec2 edge_normal = (a[next] - a[i]).normal().normalized();
 
     float min_sep = std::numeric_limits<float>::max();
     math::Vec2 min_vertex;
 
     for (int j = 0; j < b.size(); ++j) {
-      const float projection = dot(b[j] - a[i], edge);
+      const float projection = dot(b[j] - a[i], edge_normal);
 
       if (projection < min_sep) {
         min_sep = projection;
@@ -70,7 +70,7 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
 
     if (min_sep > separation.distance) {
       separation.distance = min_sep;
-      separation.axis = (a[next] - a[i]).normalized();
+      separation.axis = edge_normal;
       separation.point = min_vertex;
     }
   }
@@ -100,16 +100,16 @@ std::optional<Contact> test_polygon_polygon(const Body& a, const Body& b) {
   if (ab_separation.distance > ba_separation.distance) {
     return Contact{
         .start = ab_separation.point,
-        .end = ab_separation.point - ab_separation.axis.perpendicular().normalized() * ab_separation.distance,
-        .normal = ab_separation.axis.perpendicular().normalized(),
+        .end = ab_separation.point - ab_separation.axis * ab_separation.distance,
+        .normal = ab_separation.axis,
         .depth = -ab_separation.distance,
     };
   }
 
   return Contact{
-      .start = ba_separation.point - ba_separation.axis.perpendicular().normalized() * ba_separation.distance,
+      .start = ba_separation.point - ba_separation.axis * ba_separation.distance,
       .end = ba_separation.point,
-      .normal = -ba_separation.axis.perpendicular().normalized(),
+      .normal = -ba_separation.axis,
       .depth = -ba_separation.distance,
   };
 }

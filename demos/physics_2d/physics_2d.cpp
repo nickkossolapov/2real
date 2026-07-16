@@ -37,67 +37,78 @@ std::vector<math::Vec2> to_world2(const math::Vec2 position, const std::vector<m
 
   return world_points;
 }
-
-std::tuple<math::Vec2, math::Vec2> test_circle_polygon_nearest_vertex(const physics::Body& circle,
-                                                                      const physics::Body& polygon) {
+std::tuple<math::Vec2, math::Vec2, bool> test_circle_polygon_vertex_and_edge(const physics::Body& circle,
+                                                                             const physics::Body& polygon) {
+  const auto& circle_shape = std::get<physics::shape::Circle>(circle.shape);
   const auto& polygon_shape = std::get<physics::shape::Polygon>(polygon.shape);
   const auto polygon_points = to_world2(polygon.position, polygon_shape.points, polygon.rotation);
 
-  int nearest_point = 0;
+  bool is_inside = true;
+
+  for (int i = 0; i < polygon_points.size(); ++i) {
+    const int next = (i + 1) % polygon_points.size();
+    const math::Vec2 edge_normal = (polygon_points[next] - polygon_points[i]).normal();
+
+    if (math::dot(circle.position - polygon_points[i], edge_normal) > 0) {
+      is_inside = false;
+      break;
+    }
+  }
+
+  // Check vertices
+  int nearest_vertex = 0;
   float nearest_distance_sq = std::numeric_limits<float>().max();
 
   for (int i = 0; i < polygon_points.size(); ++i) {
     const float distance_sq = (circle.position - polygon_points[i]).length_squared();
 
     if (distance_sq < nearest_distance_sq) {
-      nearest_point = i;
+      nearest_vertex = i;
       nearest_distance_sq = distance_sq;
     }
   }
 
-  const math::Vec2 circle_point = circle.position - polygon_points[nearest_point];
-  // Check right and left projections to determine the nearest edge
-  const int next = nearest_point == polygon_points.size() - 1 ? 0 : nearest_point + 1;
-  const math::Vec2 right_edge = (polygon_points[nearest_point] - polygon_points[next]).normalized();
-  const float right_projection = math::dot(circle_point, right_edge);
-
-  const int prev = nearest_point == 0 ? polygon_points.size() - 1 : nearest_point - 1;
-  const math::Vec2 left_edge = (polygon_points[nearest_point] - polygon_points[prev]).normalized();
-  const float left_projection = math::dot(circle_point, left_edge);
-
-  if (right_projection < left_projection) {
-    return {polygon_points[nearest_point], polygon_points[next]};
+  if (nearest_distance_sq < (circle_shape.radius * circle_shape.radius)) {
+    return {polygon_points[nearest_vertex], circle.position, true};
   }
 
-  return {polygon_points[prev], polygon_points[nearest_point]};
-}
-
-std::tuple<math::Vec2, math::Vec2> test_circle_polygon_sat(const physics::Body& circle, const physics::Body& polygon) {
-  const auto& polygon_shape = std::get<physics::shape::Polygon>(polygon.shape);
-  const auto polygon_points = to_world2(polygon.position, polygon_shape.points, polygon.rotation);
-
-  int nearest_point = 0;
-  float closest_projection = std::numeric_limits<float>().min();
+  // Check edges
+  int nearest_edge = -1;
+  float closest_projection = std::numeric_limits<float>().lowest();
 
   for (int i = 0; i < polygon_points.size(); ++i) {
-    const math::Vec2 circle_point = circle.position - polygon_points[i];
     const int next = (i + 1) % polygon_points.size();
-    const math::Vec2 edge_normal = (polygon_points[next] - polygon_points[i]).perpendicular().normalized();
+    const math::Vec2 edge = polygon_points[next] - polygon_points[i];
 
-    const float projection = math::dot(circle_point, edge_normal);
+    // Check if it's within the line segment
+    if (math::dot(circle.position - polygon_points[i], edge) < 0) {
+      continue;
+    }
 
-    if (projection < 0 && projection > closest_projection) {
-      nearest_point = i;
-      closest_projection = projection;
-    } else if (projection < closest_projection) {
-      nearest_point = i;
+    if (math::dot(circle.position - polygon_points[next], -edge) < 0) {
+      continue;
+    }
+
+    const math::Vec2 edge_normal = (polygon_points[next] - polygon_points[i]).normal().normalized();
+    const float projection = math::dot(circle.position - polygon_points[i], edge_normal);
+
+    const bool better = (closest_projection < 0 && projection >= 0)
+                        || (closest_projection >= 0 && projection >= 0 && projection < closest_projection)
+                        || (closest_projection < 0 && projection < 0 && projection > closest_projection);
+
+    if (better) {
+      nearest_edge = i;
       closest_projection = projection;
     }
   }
 
-  const int next = (nearest_point + 1) % polygon_points.size();
+  if (nearest_edge == -1 || closest_projection > circle_shape.radius || (!is_inside && closest_projection < 0)) {
+    return {{}, {}, false};
+  }
 
-  return {polygon_points[nearest_point], polygon_points[next]};
+  const int next = (nearest_edge + 1) % polygon_points.size();
+
+  return {polygon_points[nearest_edge], polygon_points[next], true};
 }
 
 void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::Body& body, uint32_t color) {
@@ -159,6 +170,7 @@ int main(int argc, char* argv[]) {
                       }),
                       math::Vec2{30.0f, 18.0f});
   bodies.emplace_back(0.0f, 0.5f, physics::shape::Circle(3.0f), math::Vec2{15.0f, 18.0f});
+  bodies.emplace_back(0.0f, 0.5f, physics::shape::Circle(3.0f), math::Vec2{15.0f, 18.0f});
 
   bodies[0].rotation = 1.4f;
 
@@ -188,7 +200,13 @@ int main(int argc, char* argv[]) {
     pointer = {.x = state.cursor_position.x / pixels_per_meter,
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
-    bodies[1].position = pointer;
+    if (state.primary == input::ButtonState::Down) {
+      bodies[1].position = pointer;
+    }
+
+    if (state.secondary == input::ButtonState::Down) {
+      bodies[2].position = pointer;
+    }
 
     // if (events.primary == input::Event::Released) {
     //   bodies.emplace_back(1.0f, 0.8f, physics::shape::Circle(1.0f), pointer);
@@ -208,15 +226,23 @@ int main(int argc, char* argv[]) {
       render_body(drawer, fb, body, render::color::white);
     }
 
-    const auto circle = bodies[1];
+    const auto circle1 = bodies[1];
+    const auto circle2 = bodies[2];
     const auto polygon = bodies[0];
 
-    const auto& circle_shape = std::get<physics::shape::Circle>(circle.shape);
+    auto [start2, end2, has_collision2] = test_circle_polygon_vertex_and_edge(circle2, polygon);
 
-    auto [start, end] = test_circle_polygon_sat(circle, polygon);
+    if (has_collision2) {
+      drawer.line(fb, start2, end2, render::color::red);
+      drawer.line(fb, start2, circle2.position, render::color::purple);
+    }
 
-    drawer.line(fb, start, end, render::color::red);
-    drawer.line(fb, start, pointer, render::color::purple);
+    auto [start1, end1, has_collision1] = test_circle_polygon_vertex_and_edge(circle1, polygon);
+
+    if (has_collision1) {
+      drawer.line(fb, start1, end1, render::color::red);
+      drawer.line(fb, start1, circle1.position, render::color::purple);
+    }
   };
 
   return engine::run(app_config, read_input, update, render);

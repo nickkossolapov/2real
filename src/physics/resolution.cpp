@@ -16,9 +16,9 @@ void resolve_penetration(Body& a, Body& b, const Contact& contact) {
 
 void resolve_impulse(Body& a, Body& b, const Contact& contact) {
   const math::Vec2 ra = contact.end - a.position;
-  const math::Vec2 va = a.velocity + ra.perpendicular() * a.angular_velocity;
+  const math::Vec2 va = a.velocity + ra.right_perpendicular() * a.angular_velocity;
   const math::Vec2 rb = contact.start - b.position;
-  const math::Vec2 vb = b.velocity + rb.perpendicular() * b.angular_velocity;
+  const math::Vec2 vb = b.velocity + rb.right_perpendicular() * b.angular_velocity;
 
   const math::Vec2 v_rel = va - vb;
 
@@ -29,7 +29,7 @@ void resolve_impulse(Body& a, Body& b, const Contact& contact) {
                                 std::pow(math::cross(rb, contact.normal), 2) * b.inv_inertia);
   const math::Vec2 jn = contact.normal * normal_impulse;
 
-  const math::Vec2 tangent = contact.normal.perpendicular();
+  const math::Vec2 tangent = contact.normal.right_perpendicular();
 
   const float f = std::max(a.friction, b.friction);
   const float tangential_impulse = -(1 + f) * math::dot(v_rel, tangent) /
