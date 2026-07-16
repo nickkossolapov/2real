@@ -54,7 +54,7 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
 
   for (int i = 0; i < a.size(); ++i) {
     const int next = (i + 1) % a.size();
-    const math::Vec2 edge_normal = (a[next] - a[i]).normal().normalized();
+    const math::Vec2 edge_normal = (a[next] - a[i]).normal();
 
     float min_sep = std::numeric_limits<float>::max();
     math::Vec2 min_vertex;

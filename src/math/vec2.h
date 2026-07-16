@@ -63,7 +63,7 @@ struct Vec2 {
   Vec2 right_perpendicular() const { return Vec2(y, -x); }
 
   /// Outward normal of a CW-wound polygon edge
-  Vec2 normal() const { return Vec2(-y, x); }
+  Vec2 normal() const { return Vec2(-y, x).normalized(); }
 };
 
 inline float dot(const Vec2& v1, const Vec2& v2) {
