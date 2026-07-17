@@ -1,18 +1,15 @@
 #include "collision.h"
 
 #include "math_utils.h"
-#include "transform.h"
 
 namespace physics::collision {
 
 namespace {
 
-std::optional<Contact> test_circle_circle(const Body& a, const Body& b) {
-  const auto [a_radius] = std::get<shape::Circle>(a.shape);
-  const auto [b_radius] = std::get<shape::Circle>(b.shape);
+std::optional<Contact> test(const Body& a, const shape::Circle& a_shape, const Body& b, const shape::Circle& b_shape) {
 
   const math::Vec2 ab = b.position - a.position;
-  const float radius_sum = a_radius + b_radius;
+  const float radius_sum = a_shape.radius + b_shape.radius;
 
   if (ab.length_squared() > radius_sum * radius_sum) {
     return {};
@@ -21,8 +18,8 @@ std::optional<Contact> test_circle_circle(const Body& a, const Body& b) {
   Contact contact;
 
   contact.normal = ab.normalized();
-  contact.start = b.position - contact.normal * b_radius;
-  contact.end = a.position + contact.normal * a_radius;
+  contact.start = b.position - contact.normal * b_shape.radius;
+  contact.end = a.position + contact.normal * a_shape.radius;
   contact.depth = (contact.end - contact.start).length();
 
   return contact;
@@ -79,10 +76,10 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
   return separation;
 }
 
-std::optional<Contact> test_polygon_polygon(const Body& a, const Body& b) {
-  const auto& a_shape = std::get<shape::Polygon>(a.shape);
-  const auto& b_shape = std::get<shape::Polygon>(b.shape);
-
+std::optional<Contact> test(const Body& a,
+                            const shape::Polygon& a_shape,
+                            const Body& b,
+                            const shape::Polygon& b_shape) {
   const auto a_points = to_world(a.position, a_shape.points, a.rotation);
   const auto b_points = to_world(b.position, b_shape.points, b.rotation);
 
@@ -115,25 +112,95 @@ std::optional<Contact> test_polygon_polygon(const Body& a, const Body& b) {
   };
 }
 
-std::optional<Contact> test(const shape::Circle& a, const Transform a_t, const shape::Polygon& b, const Transform b_t) {
-  return {};
+std::optional<Contact> test(const Body& polygon,
+                            const shape::Polygon& polygon_shape,
+                            const Body& circle,
+                            const shape::Circle& circle_shape) {
+  const auto polygon_points = to_world(polygon.position, polygon_shape.points, polygon.rotation);
+
+  int vertex = 0;
+  float max_projection = std::numeric_limits<float>::lowest();
+
+  for (int i = 0; i < polygon_points.size(); ++i) {
+    const int next = (i + 1) % polygon_points.size();
+    const math::Vec2 edge_normal = math_utils::normal(polygon_points[next] - polygon_points[i]);
+    const float projection = math::dot(circle.position - polygon_points[i], edge_normal);
+
+    if (projection > max_projection) {
+      vertex = i;
+      max_projection = projection;
+    }
+  }
+
+  // Check region: nearest left, right, or edge
+  const int end = (vertex + 1) % polygon_points.size();
+  const math::Vec2 edge = polygon_points[end] - polygon_points[vertex];
+  const float radius_sq = circle_shape.radius * circle_shape.radius;
+
+  if (math::dot(circle.position - polygon_points[vertex], edge) < 0) {
+    if ((circle.position - polygon_points[vertex]).length_squared() < radius_sq) {
+      const math::Vec2 normal = (circle.position - polygon_points[vertex]).normalized();
+      const float depth = circle_shape.radius - (circle.position - polygon_points[vertex]).length();
+
+      return Contact{
+          .start = circle.position - normal * circle_shape.radius,
+          .end = polygon_points[vertex],
+          .normal = normal,
+          .depth = depth,
+      };
+    }
+
+    return {};
+  }
+
+  if (math::dot(circle.position - polygon_points[end], -edge) < 0) {
+    if ((circle.position - polygon_points[end]).length_squared() < radius_sq) {
+      const math::Vec2 normal = (circle.position - polygon_points[end]).normalized();
+      const float depth = circle_shape.radius - (circle.position - polygon_points[end]).length();
+
+      return Contact{
+          .start = circle.position - normal * circle_shape.radius,
+          .end = polygon_points[end],
+          .normal = normal,
+          .depth = depth,
+      };
+    }
+
+    return {};
+  }
+
+  if (max_projection > circle_shape.radius) {
+    return {};
+  }
+
+  const math::Vec2 normal = math_utils::normal(polygon_points[end] - polygon_points[vertex]);
+  const float depth = circle_shape.radius - max_projection;
+
+  return Contact{
+      .start = circle.position - normal * circle_shape.radius,
+      .end = circle.position - normal * (circle_shape.radius - depth),
+      .normal = normal,
+      .depth = depth,
+  };
+}
+
+std::optional<Contact> test(const Body& circle,
+                            const shape::Circle& circle_shape,
+                            const Body& polygon,
+                            const shape::Polygon& polygon_shape) {
+  const auto contact = test(polygon, polygon_shape, circle, circle_shape);
+
+  if (!contact) {
+    return {};
+  }
+
+  return contact->flipped();
 }
 
 } // namespace
 
 std::optional<Contact> test(const Body& a, const Body& b) {
-  auto visitor = Overloaded{
-      [&](const shape::Circle&, const shape::Circle&) { return test_circle_circle(a, b); },
-      [&](const shape::Circle& a_c, const shape::Polygon& b_box) {
-        return test(a_c, {a.position}, b_box, {b.position, b.rotation});
-      },
-      [&](const shape::Polygon& a_box, const shape::Circle& b_circle) {
-        return test(b_circle, {b.position, b.rotation}, a_box, {a.position});
-      },
-      [&](const shape::Polygon&, const shape::Polygon&) { return test_polygon_polygon(a, b); },
-  };
-
-  return std::visit(visitor, a.shape, b.shape);
+  return std::visit([&](const auto& a_s, const auto& b_s) { return test(a, a_s, b, b_s); }, a.shape, b.shape);
 }
 
 } // namespace physics::collision

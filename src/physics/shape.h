@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/vec2.h"
 #include "util/overload.h"
 
 #include <variant>
@@ -19,10 +20,10 @@ struct Polygon {
 
 static Polygon box(const float width, const float height) {
   return {{
-      {-width / 2.0f, height / 2.0f},
-      {-width / 2.0f, -height / 2.0f},
-      {width / 2.0f, -height / 2.0f},
       {width / 2.0f, height / 2.0f},
+      {width / 2.0f, -height / 2.0f},
+      {-width / 2.0f, -height / 2.0f},
+      {-width / 2.0f, height / 2.0f},
   }};
 }
 
