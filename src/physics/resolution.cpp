@@ -1,5 +1,7 @@
 #include "resolution.h"
 
+#include "math_utils.h"
+
 #include <cmath>
 
 namespace physics::resolution {
@@ -16,25 +18,28 @@ void resolve_penetration(Body& a, Body& b, const Contact& contact) {
 
 void resolve_impulse(Body& a, Body& b, const Contact& contact) {
   const math::Vec2 ra = contact.end - a.position;
-  const math::Vec2 va = a.velocity + ra.right_perpendicular() * a.angular_velocity;
+  const math::Vec2 va = a.velocity + math_utils::right_perpendicular(ra) * a.angular_velocity;
   const math::Vec2 rb = contact.start - b.position;
-  const math::Vec2 vb = b.velocity + rb.right_perpendicular() * b.angular_velocity;
+  const math::Vec2 vb = b.velocity + math_utils::right_perpendicular(rb) * b.angular_velocity;
 
   const math::Vec2 v_rel = va - vb;
 
   // TODO move to contact manifold, and only apply normal impulse if the speed is about a certain speed?
   const float e = std::min(a.restitution, b.restitution);
-  const float normal_impulse = -(1 + e) * math::dot(v_rel, contact.normal) /
-                               (a.inv_mass + b.inv_mass + std::pow(math::cross(ra, contact.normal), 2) * a.inv_inertia +
-                                std::pow(math::cross(rb, contact.normal), 2) * b.inv_inertia);
+  const float normal_impulse =
+      -(1 + e) * math::dot(v_rel, contact.normal)
+      / (a.inv_mass + b.inv_mass + std::pow(math_utils::cross(ra, contact.normal), 2) * a.inv_inertia
+         + std::pow(math_utils::cross(rb, contact.normal), 2) * b.inv_inertia);
+
   const math::Vec2 jn = contact.normal * normal_impulse;
 
-  const math::Vec2 tangent = contact.normal.right_perpendicular();
+  const math::Vec2 tangent = math_utils::right_perpendicular(contact.normal);
 
   const float f = std::max(a.friction, b.friction);
-  const float tangential_impulse = -(1 + f) * math::dot(v_rel, tangent) /
-                                   (a.inv_mass + b.inv_mass + std::pow(math::cross(ra, tangent), 2) * a.inv_inertia +
-                                    std::pow(math::cross(rb, tangent), 2) * b.inv_inertia);
+  const float tangential_impulse =
+      -(1 + f) * math::dot(v_rel, tangent)
+      / (a.inv_mass + b.inv_mass + std::pow(math_utils::cross(ra, tangent), 2) * a.inv_inertia
+         + std::pow(math_utils::cross(rb, tangent), 2) * b.inv_inertia);
   const math::Vec2 jt = tangent * tangential_impulse;
 
   const math::Vec2 j = jn + jt;

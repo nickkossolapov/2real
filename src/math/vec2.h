@@ -52,26 +52,20 @@ struct Vec2 {
   Vec2 operator-() const { return {-x, -y}; }
 
   Vec2 normalized() const {
-    const float length = std::sqrt(x * x + y * y);
+    const float m = length();
 
-    assert(length >= epsilon);
+    assert(m >= epsilon);
 
-    return {x / length, y / length};
+    if (m < epsilon) {
+      return {0, 0};
+    }
+
+    return {x / m, y / m};
   }
-
-  /// Right/clockwise perpendicular (y, -x)
-  Vec2 right_perpendicular() const { return Vec2(y, -x); }
-
-  /// Outward normal of a CW-wound polygon edge
-  Vec2 normal() const { return Vec2(-y, x).normalized(); }
 };
 
 inline float dot(const Vec2& v1, const Vec2& v2) {
   return v1.x * v2.x + v1.y * v2.y;
-}
-
-inline float cross(const Vec2& v1, const Vec2& v2) {
-  return v1.x * v2.y - v1.y * v2.x; // returns the z component of the cross product
 }
 
 } // namespace math

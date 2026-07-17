@@ -1,5 +1,7 @@
 #include "body.h"
 
+#include "math_utils.h"
+
 namespace physics {
 
 Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float rot)
@@ -63,7 +65,7 @@ void Body::add_impulse(const math::Vec2 j, const math::Vec2 r) {
   }
 
   velocity += j * inv_mass;
-  angular_velocity += math::cross(j, r) * inv_inertia;
+  angular_velocity += math_utils::cross(j, r) * inv_inertia;
 }
 
 void Body::reset() {

@@ -1,4 +1,7 @@
 #pragma once
+#include "common.h"
+
+#include <cassert>
 #include <cmath>
 
 namespace math {
@@ -8,35 +11,16 @@ struct Vec3 {
 
   float length() const { return std::sqrt(x * x + y * y + z * z); }
 
-  void normalize() {
-    constexpr float tol = 1e-6f;
-
-    if (const float m = length(); m > tol) {
-      x /= m;
-      y /= m;
-      z /= m;
-    } else {
-      x = 0.0f;
-      y = 0.0f;
-      z = 0.0f;
-    }
-
-    if (std::fabs(x) < tol) {
-      x = 0.0f;
-    }
-    if (std::fabs(y) < tol) {
-      y = 0.0f;
-    }
-    if (std::fabs(z) < tol) {
-      z = 0.0f;
-    }
-  }
-
   Vec3 normalized() const {
-    Vec3 v = {x, y, z};
-    v.normalize();
+    const float m = length();
 
-    return v;
+    assert(m >= epsilon);
+
+    if (m < epsilon) {
+      return {0, 0, 0};
+    }
+
+    return {x / m, y / m, z / m};
   }
 
   Vec3 operator+(const Vec3& v) const { return {x + v.x, y + v.y, z + v.z}; }
