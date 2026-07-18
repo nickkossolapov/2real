@@ -25,22 +25,6 @@ std::optional<Contact> test(const Body& a, const shape::Circle& a_shape, const B
   return contact;
 }
 
-std::vector<math::Vec2> to_world(const math::Vec2 position, const std::vector<math::Vec2>& local, const float a) {
-  std::vector<math::Vec2> world_points;
-
-  for (int i = 0; i < local.size(); ++i) {
-    const auto [x, y] = local[i];
-
-    // left-handed rotation matrix
-    const float world_x = std::cos(a) * x + std::sin(a) * y + position.x;
-    const float world_y = -std::sin(a) * x + std::cos(a) * y + position.y;
-
-    world_points.emplace_back(world_x, world_y);
-  }
-
-  return world_points;
-}
-
 struct PolygonSeparation {
   float distance;
   math::Vec2 axis; // unit outward normal of the reference face (points out of polygon `a`)
@@ -80,8 +64,8 @@ std::optional<Contact> test(const Body& a,
                             const shape::Polygon& a_shape,
                             const Body& b,
                             const shape::Polygon& b_shape) {
-  const auto a_points = to_world(a.position, a_shape.points, a.rotation);
-  const auto b_points = to_world(b.position, b_shape.points, b.rotation);
+  const auto a_points = math_utils::to_world(a.position, a_shape.points, a.rotation);
+  const auto b_points = math_utils::to_world(b.position, b_shape.points, b.rotation);
 
   const auto ab_separation = find_min_separation(a_points, b_points);
 
@@ -116,7 +100,7 @@ std::optional<Contact> test(const Body& polygon,
                             const shape::Polygon& polygon_shape,
                             const Body& circle,
                             const shape::Circle& circle_shape) {
-  const auto polygon_points = to_world(polygon.position, polygon_shape.points, polygon.rotation);
+  const auto polygon_points = math_utils::to_world(polygon.position, polygon_shape.points, polygon.rotation);
 
   int vertex = 0;
   float max_projection = std::numeric_limits<float>::lowest();
@@ -200,6 +184,10 @@ std::optional<Contact> test(const Body& circle,
 } // namespace
 
 std::optional<Contact> test(const Body& a, const Body& b) {
+  if (a.is_static() && b.is_static()) {
+    return {};
+  }
+
   return std::visit([&](const auto& a_s, const auto& b_s) { return test(a, a_s, b, b_s); }, a.shape(), b.shape());
 }
 

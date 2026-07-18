@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/rect.h"
 #include "math/vec2.h"
 #include "shape.h"
 
@@ -29,6 +30,9 @@ struct Body {
   void add_impulse(math::Vec2 j);
   void add_impulse(math::Vec2 j, math::Vec2 r);
 
+  math::Rect aabb() const { return aabb_; }
+  void update_aabb();
+
   bool is_static() const { return inv_mass_ < math::epsilon; };
 
   float inv_mass() const { return inv_mass_; }
@@ -45,6 +49,8 @@ private:
   float inv_inertia_;
 
   Shape shape_;
+  math::Rect aabb_;
+
   void reset();
 };
 

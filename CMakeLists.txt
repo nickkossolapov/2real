@@ -61,6 +61,7 @@ add_library(
         src/physics/math_utils.h
         src/physics/world.h
         src/physics/world.cpp
+        src/engine/sparse_logger.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

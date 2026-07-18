@@ -1,6 +1,7 @@
 #include "drawer.h"
 #include "engine/run.h"
 #include "engine/sdl.h"
+#include "engine/sparse_logger.h"
 #include "input/input.h"
 #include "math/rect.h"
 #include "physics/body.h"
@@ -59,8 +60,8 @@ int main(int argc, char* argv[]) {
   };
 
   constexpr float pixels_per_meter = 20.0f;
-
   Drawer drawer(pixels_per_meter);
+  engine::SparseLogger logger;
 
   bool is_holding = false;
   int held_particle = 0;
@@ -68,15 +69,18 @@ int main(int argc, char* argv[]) {
 
   physics::World world{};
 
-  world.add_body(physics::Body{0.0f, 0.5f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
-  world.add_body(physics::Body{0.0f, 0.5f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
   world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f}});
+  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{2.0f, 17.0f}});
+  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{48.0f, 17.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
 
-  world.bodies()[0].rotation = 1.4f;
+  world.bodies()[3].rotation = 1.4f;
 
-  auto update = [&world](const float dt, const input::InputState& input) {
+  auto update = [&world, &logger](const float dt, const input::InputState& input) {
     world.update(dt);
-    world.check_collisions();
+
+    logger.log("Number of bodies: %zu", world.bodies().size());
   };
 
   auto read_input = [&world, &pointer, &is_holding, &held_particle](const input::InputState& state,
@@ -85,11 +89,11 @@ int main(int argc, char* argv[]) {
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
     if (events.primary == input::Event::Released) {
-      world.add_body(physics::Body{1.0f, 0.8f, physics::shape::Circle(1.0f), pointer});
+      world.add_body(physics::Body{1.0f, 0.5f, physics::shape::Circle(1.0f), pointer});
     }
 
     if (events.secondary == input::Event::Released) {
-      world.add_body(physics::Body{1.0f, 0.8f, physics::shape::box(2.0f, 2.0f), pointer});
+      world.add_body(physics::Body{1.0f, 0.5f, physics::shape::box(2.0f, 2.0f), pointer});
     }
   };
 

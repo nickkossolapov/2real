@@ -4,6 +4,46 @@
 
 namespace physics {
 
+namespace {
+
+math::Rect calculate_aabb(const math::Vec2 position, const float rotation, Shape shape) {
+  if (std::holds_alternative<shape::Circle>(shape)) {
+    const auto [radius] = std::get<shape::Circle>(shape);
+
+    return {
+        .x_min = position.x - radius,
+        .x_max = position.x + radius,
+        .y_min = position.y - radius,
+        .y_max = position.y + radius,
+    };
+  }
+
+  if (std::holds_alternative<shape::Polygon>(shape)) {
+    const auto [local_points] = std::get<shape::Polygon>(shape);
+    const std::vector<math::Vec2> points = math_utils::to_world(position, local_points, rotation);
+
+    math::Rect rect = {
+        .x_min = points[0].x,
+        .x_max = points[0].x,
+        .y_min = points[0].y,
+        .y_max = points[0].y,
+    };
+
+    for (auto [x, y] : points) {
+      rect.x_min = std::min(rect.x_min, x);
+      rect.x_max = std::max(rect.x_max, x);
+      rect.y_min = std::min(rect.y_min, y);
+      rect.y_max = std::max(rect.y_max, y);
+    }
+
+    return rect;
+  }
+
+  return {};
+}
+
+} // namespace
+
 Body::Body(const float m, const Shape& shape, const math::Vec2 pos, const float rot)
     : Body(m, 0.0f, shape, pos, rot) {}
 
@@ -24,7 +64,8 @@ Body::Body(const float m,
       inertia_(compute_moment_of_inertia(shape, mass_)),
       inv_inertia_(inertia_ > 0.0f ? 1.0f / inertia_ : 0.0f),
       restitution(restitution),
-      friction(friction) {}
+      friction(friction),
+      aabb_(calculate_aabb(position, rotation, shape)) {}
 
 void Body::integrate(const float dt, const math::Vec2 gravity) {
   if (is_static()) {
@@ -66,6 +107,9 @@ void Body::add_impulse(const math::Vec2 j, const math::Vec2 r) {
 
   velocity += j * inv_mass_;
   angular_velocity += math_utils::cross(j, r) * inv_inertia_;
+}
+void Body::update_aabb() {
+  aabb_ = calculate_aabb(position, rotation, shape_);
 }
 
 void Body::reset() {
