@@ -59,6 +59,8 @@ add_library(
         src/physics/resolution.h
         src/physics/resolution.cpp
         src/physics/math_utils.h
+        src/physics/world.h
+        src/physics/world.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)

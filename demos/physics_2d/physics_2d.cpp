@@ -7,6 +7,7 @@
 #include "physics/collision.h"
 #include "physics/force.h"
 #include "physics/resolution.h"
+#include "physics/world.h"
 #include "render/color.h"
 #include "render/framebuffer.h"
 
@@ -39,7 +40,7 @@ void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::B
       },
   };
 
-  return std::visit(visitor, body.shape);
+  return std::visit(visitor, body.shape());
 }
 
 } // namespace
@@ -61,57 +62,40 @@ int main(int argc, char* argv[]) {
 
   Drawer drawer(pixels_per_meter);
 
-  constexpr float world_width = settings.width / pixels_per_meter;
-  constexpr float world_height = settings.height / pixels_per_meter;
-
   bool is_holding = false;
   int held_particle = 0;
   math::Vec2 pointer;
 
-  std::vector<physics::Body> bodies{};
+  physics::World world{};
 
-  bodies.emplace_back(0.0f, 0.5f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f});
-  bodies.emplace_back(0.0f, 0.5f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f});
-  bodies.emplace_back(0.0f, 0.2f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f});
+  world.add_body(physics::Body{0.0f, 0.5f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.5f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f}});
 
-  bodies[0].rotation = 1.4f;
+  world.bodies()[0].rotation = 1.4f;
 
-  auto update = [&bodies](const float dt, const input::InputState& input) {
-    for (auto& body : bodies) {
-      body.add_force(physics::force::gravity(body.mass));
-    }
-
-    for (auto& body : bodies) {
-      body.integrate(dt);
-    }
-
-    for (int i = 0; i < bodies.size(); ++i) {
-      for (int j = i + 1; j < bodies.size(); ++j) {
-        auto& a = bodies[i];
-        auto& b = bodies[j];
-
-        if (auto c = physics::collision::test(a, b)) {
-          physics::resolution::resolve(a, b, *c);
-        }
-      }
-    }
+  auto update = [&world](const float dt, const input::InputState& input) {
+    world.update(dt);
+    world.check_collisions();
   };
 
-  auto read_input = [&bodies, &pointer, &is_holding, &held_particle](const input::InputState& state,
-                                                                     const input::InputEvents& events) {
+  auto read_input = [&world, &pointer, &is_holding, &held_particle](const input::InputState& state,
+                                                                    const input::InputEvents& events) {
     pointer = {.x = state.cursor_position.x / pixels_per_meter,
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
     if (events.primary == input::Event::Released) {
-      bodies.emplace_back(1.0f, 0.8f, physics::shape::Circle(1.0f), pointer);
+      world.add_body(physics::Body{1.0f, 0.8f, physics::shape::Circle(1.0f), pointer});
     }
 
     if (events.secondary == input::Event::Released) {
-      bodies.emplace_back(1.0f, 0.8f, physics::shape::box(2.0f, 2.0f), pointer);
+      world.add_body(physics::Body{1.0f, 0.8f, physics::shape::box(2.0f, 2.0f), pointer});
     }
   };
 
-  auto render = [&bodies, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
+  auto render = [&world, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
+    const std::vector<physics::Body> bodies = world.bodies();
+
     if (is_holding) {
       drawer.line(fb, bodies[held_particle].position, pointer, render::color::red);
     }

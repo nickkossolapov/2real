@@ -200,7 +200,7 @@ std::optional<Contact> test(const Body& circle,
 } // namespace
 
 std::optional<Contact> test(const Body& a, const Body& b) {
-  return std::visit([&](const auto& a_s, const auto& b_s) { return test(a, a_s, b, b_s); }, a.shape, b.shape);
+  return std::visit([&](const auto& a_s, const auto& b_s) { return test(a, a_s, b, b_s); }, a.shape(), b.shape());
 }
 
 } // namespace physics::collision
