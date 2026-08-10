@@ -54,3 +54,6 @@ A lot of this will be following existing resources, so these are mostly referenc
   rasterization https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage.html
 * Phong shading
 * https://fgiesen.wordpress.com/2011/07/09/a-trip-through-the-graphics-pipeline-2011-index/
+* Physics collision solvers
+	* https://www.havok.com/blog/how-havoks-constraint-solver-works-pgs-baumgarte/
+	* https://box2d.org/posts/2024/02/solver2d/
