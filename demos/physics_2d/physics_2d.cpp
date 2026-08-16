@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
   world.add_body(physics::Body{0.0f, 0.3f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
   world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
 
-  world.bodies()[3].rotation = 1.4f;
+  world.bodies()[3]->rotation = 1.4f;
 
   auto update = [&world, &logger](const float dt, const input::InputState& input) {
     world.update(dt);
@@ -98,14 +98,14 @@ int main(int argc, char* argv[]) {
   };
 
   auto render = [&world, &is_holding, &held_particle, &pointer, &drawer](render::Framebuffer& fb) {
-    const std::vector<physics::Body> bodies = world.bodies();
+    const auto& bodies = world.bodies();
 
     if (is_holding) {
-      drawer.line(fb, bodies[held_particle].position, pointer, render::color::red);
+      drawer.line(fb, bodies[held_particle]->position, pointer, render::color::red);
     }
 
     for (auto& body : bodies) {
-      render_body(drawer, fb, body, render::color::white);
+      render_body(drawer, fb, *body, render::color::white);
     }
   };
 

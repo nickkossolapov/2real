@@ -5,27 +5,27 @@
 
 namespace physics {
 
-void World::update(const float dt) {
+void World::update(const float dt) const {
   for (auto& body : bodies_) {
-    body.update_aabb();
-    body.integrate(dt, gravity_);
+    body->update_aabb();
+    body->integrate(dt, gravity_);
   }
 
   check_collisions();
 }
 
-void World::check_collisions() {
+void World::check_collisions() const {
   for (int i = 0; i < bodies_.size(); ++i) {
     for (int j = i + 1; j < bodies_.size(); ++j) {
       auto& a = bodies_[i];
       auto& b = bodies_[j];
 
-      if (!a.aabb().intersects(b.aabb())) {
+      if (!a->aabb().intersects(b->aabb())) {
         continue;
       }
 
-      if (auto contact = collision::test(a, b)) {
-        resolution::resolve(a, b, *contact);
+      if (auto contact = collision::test(*a, *b)) {
+        resolution::resolve(*a, *b, *contact);
       }
     }
   }
