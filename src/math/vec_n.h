@@ -17,13 +17,13 @@ struct VecN {
 
   static constexpr int size() noexcept { return N; }
 
-  float& operator[](int i) {
+  float& operator[](const int i) {
     assert(i >= 0 && i < N);
 
     return data_[i];
   }
 
-  const float& operator[](int i) const {
+  const float& operator[](const int i) const {
     assert(i >= 0 && i < N);
 
     return data_[i];
@@ -32,7 +32,7 @@ struct VecN {
   VecN operator+(const VecN& v) const {
     VecN out;
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       out[i] = data_[i] + v.data_[i];
     }
 
@@ -40,7 +40,7 @@ struct VecN {
   }
 
   VecN& operator+=(const VecN& v) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       data_[i] += v.data_[i];
     }
 
@@ -50,7 +50,7 @@ struct VecN {
   VecN operator-(const VecN& v) const {
     VecN out;
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       out[i] = data_[i] - v.data_[i];
     }
 
@@ -58,7 +58,7 @@ struct VecN {
   }
 
   VecN& operator-=(const VecN& v) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       data_[i] -= v.data_[i];
     }
 
@@ -68,7 +68,7 @@ struct VecN {
   VecN operator*(const float f) const {
     VecN out;
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       out[i] = data_[i] * f;
     }
 
@@ -76,7 +76,7 @@ struct VecN {
   }
 
   VecN& operator*=(const float f) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       data_[i] *= f;
     }
 
@@ -92,7 +92,7 @@ template <int N>
 constexpr float dot(const VecN<N>& v1, const VecN<N>& v2) {
   float result = 0.0f;
 
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; ++i) {
     result += v1[i] * v2[i];
   }
 

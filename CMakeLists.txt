@@ -64,6 +64,7 @@ add_library(
         src/engine/sparse_logger.h
         src/physics/constraint.h
         src/math/vec_n.h
+        src/math/mat_mn.h
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
