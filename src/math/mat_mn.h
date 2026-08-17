@@ -20,22 +20,18 @@ struct MatMN {
   static constexpr int size() noexcept { return Rows * Cols; }
 
   float& operator()(const int row, const int col) {
-    const int i = row * Cols + col;
-
-    assert(i >= 0 && i < size());
     assert(row >= 0 && row < Rows);
     assert(col >= 0 && col < Cols);
 
+    const int i = row * Cols + col;
     return data_[i];
   }
 
   const float& operator()(const int row, const int col) const {
-    const int i = row * Cols + col;
-
-    assert(i >= 0 && i < size());
     assert(row >= 0 && row < Rows);
     assert(col >= 0 && col < Cols);
 
+    const int i = row * Cols + col;
     return data_[i];
   }
 
@@ -56,7 +52,11 @@ struct MatMN {
   VecN<Rows> operator*(const VecN<Cols>& v) const {
     VecN<Rows> out;
 
-    // todo
+    for (int row = 0; row < Rows; ++row) {
+      for (int col = 0; col < Cols; ++col) {
+        out[row] += (*this)(row, col) * v[col];
+      }
+    }
 
     return out;
   }
@@ -64,10 +64,15 @@ struct MatMN {
   template <int OtherCols>
     requires(OtherCols > 0)
   MatMN<Rows, OtherCols> operator*(const MatMN<Cols, OtherCols>& r) const {
-    const MatMN& l = *this;
     MatMN<Rows, OtherCols> out;
 
-    // todo
+    for (int row = 0; row < Rows; ++row) {
+      for (int col = 0; col < OtherCols; ++col) {
+        for (int i = 0; i < Cols; ++i) {
+          out(row, col) += (*this)(row, i) * r(i, col);
+        }
+      }
+    }
 
     return out;
   }
