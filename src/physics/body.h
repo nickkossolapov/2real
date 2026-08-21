@@ -35,6 +35,8 @@ struct Body {
 
   bool is_static() const { return inv_mass_ < math::epsilon; };
 
+  math::Vec2 world_to_local_point(const math::Vec2& world) const;
+
   float inv_mass() const { return inv_mass_; }
   float inv_inertia() const { return inv_inertia_; }
   Shape shape() const { return shape_; }

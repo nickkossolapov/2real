@@ -92,6 +92,7 @@ void Body::add_force(const math::Vec2 force) {
 void Body::add_torque(const float torque) {
   net_torque_ += torque;
 }
+
 void Body::add_impulse(const math::Vec2 j) {
   if (is_static()) {
     return;
@@ -108,8 +109,18 @@ void Body::add_impulse(const math::Vec2 j, const math::Vec2 r) {
   velocity += j * inv_mass_;
   angular_velocity += math_utils::cross(j, r) * inv_inertia_;
 }
+
 void Body::update_aabb() {
   aabb_ = calculate_aabb(position, rotation, shape_);
+}
+
+math::Vec2 Body::world_to_local_point(const math::Vec2& world) const {
+  const math::Vec2 local_space = world - position;
+
+  return {
+      .x = std::cos(rotation) * local_space.x + std::sin(rotation) * local_space.y,
+      .y = -std::sin(rotation) * local_space.x + std::cos(rotation) * local_space.y,
+  };
 }
 
 void Body::reset() {
