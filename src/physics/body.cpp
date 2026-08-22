@@ -114,12 +114,12 @@ void Body::update_aabb() {
   aabb_ = calculate_aabb(position, rotation, shape_);
 }
 
-math::Vec2 Body::world_to_local_point(const math::Vec2& world) const {
-  const math::Vec2 local_space = world - position;
+math::Vec2 Body::world_to_local_point(const math::Vec2& point) const {
+  const math::Vec2 local_space = point - position;
 
   return {
-      .x = std::cos(rotation) * local_space.x + std::sin(rotation) * local_space.y,
-      .y = -std::sin(rotation) * local_space.x + std::cos(rotation) * local_space.y,
+      .x = std::cos(-rotation) * local_space.x + std::sin(-rotation) * local_space.y,
+      .y = -std::sin(-rotation) * local_space.x + std::cos(-rotation) * local_space.y,
   };
 }
 

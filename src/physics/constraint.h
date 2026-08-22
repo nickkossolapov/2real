@@ -17,7 +17,7 @@ private:
   math::VecN<6> get_velocities() const;
 
 public:
-  JointConstraint(Body& a, Body& b, const math::Vec2 anchor)
+  explicit JointConstraint(Body& a, Body& b, const math::Vec2 anchor)
       : a_(&a),
         b_(&b),
         anchor_a_local_(a.world_to_local_point(anchor)),
