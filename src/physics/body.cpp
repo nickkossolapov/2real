@@ -67,22 +67,27 @@ Body::Body(const float m,
       friction(friction),
       aabb_(calculate_aabb(position, rotation, shape)) {}
 
-void Body::integrate(const float dt, const math::Vec2 gravity) {
+void Body::integrate_forces(const float dt, const math::Vec2 gravity) {
   if (is_static()) {
     return;
   }
 
   const math::Vec2 acceleration = gravity * gravity_scale + net_force_ * inv_mass_;
-
   velocity += acceleration * dt;
-  position += velocity * dt;
 
   const float angular_acceleration = net_torque_ * inv_inertia_;
-
   angular_velocity += angular_acceleration * dt;
-  rotation += angular_velocity * dt;
 
-  reset();
+  clear_forces();
+}
+
+void Body::integrate_positions(const float dt) {
+  if (is_static()) {
+    return;
+  }
+
+  position += velocity * dt;
+  rotation += angular_velocity * dt;
 }
 
 void Body::add_force(const math::Vec2 force) {
@@ -123,7 +128,7 @@ math::Vec2 Body::world_to_local_point(const math::Vec2& point) const {
   };
 }
 
-void Body::reset() {
+void Body::clear_forces() {
   net_force_ = {};
   net_torque_ = 0;
 }

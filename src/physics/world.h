@@ -1,5 +1,6 @@
 #pragma once
 #include "body.h"
+#include "constraint.h"
 
 #include <memory>
 #include <vector>
@@ -20,12 +21,15 @@ struct World {
     return result;
   }
 
-  void update(float dt) const;
-  void check_collisions() const;
+  void add_joint_constraint(JointConstraint constraint) { joint_constraints_.emplace_back(constraint); }
+
+  void update(float dt);
+  void check_collisions();
 
 private:
   math::Vec2 gravity_;
   std::vector<std::unique_ptr<Body>> bodies_ = {};
+  std::vector<JointConstraint> joint_constraints_ = {};
 };
 
 } // namespace physics

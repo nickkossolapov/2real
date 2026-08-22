@@ -5,16 +5,24 @@
 
 namespace physics {
 
-void World::update(const float dt) const {
+void World::update(const float dt) {
   for (auto& body : bodies_) {
     body->update_aabb();
-    body->integrate(dt, gravity_);
+    body->integrate_forces(dt, gravity_);
+  }
+
+  for (auto& constraint : joint_constraints_) {
+    constraint.solve();
+  }
+
+  for (auto& body : bodies_) {
+    body->integrate_positions(dt);
   }
 
   check_collisions();
 }
 
-void World::check_collisions() const {
+void World::check_collisions() {
   for (int i = 0; i < bodies_.size(); ++i) {
     for (int j = i + 1; j < bodies_.size(); ++j) {
       auto& a = bodies_[i];

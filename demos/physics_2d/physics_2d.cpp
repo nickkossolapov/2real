@@ -80,22 +80,12 @@ int main(int argc, char* argv[]) {
 
   physics::World world{};
 
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f}});
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{2.0f, 17.0f}});
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{48.0f, 17.0f}});
-  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
-  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{14.0f, 20.0f}});
+  world.add_body(physics::Body{1.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{16.0f, 20.0f}});
 
-  world.bodies()[3]->rotation = 1.4f;
+  auto update = [&world](const float dt, const input::InputState& input) { world.update(dt); };
 
-  auto update = [&world, &logger](const float dt, const input::InputState& input) {
-    world.update(dt);
-
-    logger.log("Number of bodies: %zu", world.bodies().size());
-  };
-
-  auto read_input = [&world, &pointer, &is_holding, &held_particle](const input::InputState& state,
-                                                                    const input::InputEvents& events) {
+  auto read_input = [&world, &pointer](const input::InputState& state, const input::InputEvents& events) {
     pointer = {.x = state.cursor_position.x / pixels_per_meter,
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
