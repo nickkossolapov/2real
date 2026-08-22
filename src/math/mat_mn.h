@@ -63,13 +63,13 @@ struct MatMN {
 
   template <int OtherCols>
     requires(OtherCols > 0)
-  MatMN<Rows, OtherCols> operator*(const MatMN<Cols, OtherCols>& r) const {
+  MatMN<Rows, OtherCols> operator*(const MatMN<Cols, OtherCols>& right) const {
     MatMN<Rows, OtherCols> out;
 
     for (int row = 0; row < Rows; ++row) {
       for (int col = 0; col < OtherCols; ++col) {
         for (int i = 0; i < Cols; ++i) {
-          out(row, col) += (*this)(row, i) * r(i, col);
+          out(row, col) += (*this)(row, i) * right(i, col);
         }
       }
     }
