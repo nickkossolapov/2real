@@ -128,6 +128,15 @@ math::Vec2 Body::world_to_local_point(const math::Vec2& point) const {
   };
 }
 
+math::Vec2 Body::local_to_world_point(const math::Vec2& point) const {
+  const math::Vec2 local_space = {
+      .x = std::cos(rotation) * point.x + std::sin(rotation) * point.y,
+      .y = -std::sin(rotation) * point.x + std::cos(rotation) * point.y,
+  };
+
+  return local_space + position;
+}
+
 void Body::clear_forces() {
   net_force_ = {};
   net_torque_ = 0;

@@ -14,6 +14,7 @@ private:
   math::MatMN<1, 6> jacobian_ = {};
 
   math::MatMN<6, 6> get_inv_m() const;
+
   math::VecN<6> get_velocities() const;
 
 public:

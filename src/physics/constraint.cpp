@@ -1,5 +1,7 @@
 #include "constraint.h"
 
+#include "math_utils.h"
+
 namespace physics {
 
 math::MatMN<6, 6> JointConstraint::get_inv_m() const {
@@ -24,6 +26,22 @@ math::VecN<6> JointConstraint::get_velocities() const {
       b_->velocity.y,
       b_->angular_velocity,
   };
+}
+
+void JointConstraint::solve() {
+  const math::Vec2 d = a_->world_to_local_point(anchor_a_local_) - b_->world_to_local_point(anchor_b_local_);
+
+  const auto jacobian = math::MatMN<6, 1>{
+      2.0f * d.x,
+      2.0f * d.y,
+      2.0f * math_utils::cross(anchor_a_local_, d),
+      2.0f * -d.x,
+      2.0f * -d.y,
+      2.0f * math_utils::cross(anchor_b_local_, -d),
+  };
+
+  const math::VecN<6> v = get_velocities();
+  const math::MatMN<6, 6> inv_m = get_inv_m();
 }
 
 } // namespace physics
