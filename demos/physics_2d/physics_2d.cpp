@@ -48,15 +48,10 @@ void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::B
 } // namespace
 
 int main(int argc, char* argv[]) {
-  math::MatMN<2, 3> l{1, 2, 3, 4, 5, 6};
-  math::MatMN<3, 2> r{7, 8, 9, 10, 11, 12};
+  math::MatMN<2, 2> a{16, 3, 7, -11};
+  math::VecN<2> b{11, 13};
 
-  math::MatMN<2, 2> product_mm = l * r;
-
-  math::MatMN<2, 3> m{1, -1, 2, 0, -3, 1};
-  math::VecN<3> v{2, 1, 0};
-
-  math::VecN<2> product_mv = m * v;
+  auto x = math::solve_linear_system(a, b, math::VecN<2>{1, 1});
 
   constexpr engine::SdlSettings settings{
       .width = 1000,

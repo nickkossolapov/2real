@@ -81,4 +81,29 @@ private:
   std::array<float, Rows * Cols> data_ = {};
 };
 
+template <int N>
+  requires(N > 0)
+VecN<N> solve_linear_system(const MatMN<N, N>& a,
+                            const VecN<N>& b,
+                            const VecN<N> initial = {},
+                            const int iterations = 8) {
+  VecN<N> x = initial;
+
+  for (int iter = 0; iter < iterations; ++iter) {
+    for (int i = 0; i < N; ++i) {
+      float term = 0;
+
+      for (int j = 0; j < N; ++j) {
+        if (j != i) {
+          term += a(i, j) * x[j];
+        }
+      }
+
+      x[i] = (b[i] - term) / a(i, i);
+    }
+  }
+
+  return x;
+}
+
 } // namespace math
