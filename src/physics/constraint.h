@@ -24,7 +24,7 @@ public:
         anchor_a_local_(a.world_to_local_point(anchor)),
         anchor_b_local_(b.world_to_local_point(anchor)) {}
 
-  void solve();
+  void solve() const;
 };
 
 struct ContactConstraint {

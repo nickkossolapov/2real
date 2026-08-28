@@ -77,6 +77,18 @@ struct MatMN {
     return out;
   }
 
+  MatMN operator*(float f) const {
+    MatMN out;
+
+    for (int row = 0; row < Rows; ++row) {
+      for (int col = 0; col < Cols; ++col) {
+        out(row, col) = (*this)(row, col) * f;
+      }
+    }
+
+    return out;
+  }
+
 private:
   std::array<float, Rows * Cols> data_ = {};
 };
@@ -91,6 +103,10 @@ VecN<N> solve_linear_system(const MatMN<N, N>& a,
 
   for (int iter = 0; iter < iterations; ++iter) {
     for (int i = 0; i < N; ++i) {
+      if (a(i, i) == 0) {
+        continue;
+      }
+
       float term = 0;
 
       for (int j = 0; j < N; ++j) {

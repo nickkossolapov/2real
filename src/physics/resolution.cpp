@@ -44,8 +44,8 @@ void resolve_impulse(Body& a, Body& b, const Contact& contact) {
 
   const math::Vec2 j = jn + jt;
 
-  a.add_impulse(j, ra);
-  b.add_impulse(-j, rb);
+  a.add_impulse_at_point(j, ra);
+  b.add_impulse_at_point(-j, rb);
 }
 
 } // namespace

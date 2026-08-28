@@ -29,8 +29,9 @@ struct Body {
 
   void add_force(math::Vec2 force);
   void add_torque(float torque);
-  void add_impulse(math::Vec2 j);
-  void add_impulse(math::Vec2 j, math::Vec2 r);
+  void add_impulse_linear(math::Vec2 j);
+  void add_impulse_angular(float j);
+  void add_impulse_at_point(math::Vec2 j, math::Vec2 r);
 
   math::Rect aabb() const { return aabb_; }
   void update_aabb();

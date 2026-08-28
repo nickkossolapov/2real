@@ -28,20 +28,34 @@ math::VecN<6> JointConstraint::get_velocities() const {
   };
 }
 
-void JointConstraint::solve() {
-  const math::Vec2 d = a_->world_to_local_point(anchor_a_local_) - b_->world_to_local_point(anchor_b_local_);
+void JointConstraint::solve() const {
+  const math::Vec2 anchor_a = a_->local_to_world_point(anchor_a_local_);
+  const math::Vec2 anchor_b = b_->local_to_world_point(anchor_b_local_);
+  const math::Vec2 d = anchor_a - anchor_b;
 
-  const auto jacobian = math::MatMN<6, 1>{
+  const auto j = math::MatMN<1, 6>{
       2.0f * d.x,
       2.0f * d.y,
-      2.0f * math_utils::cross(anchor_a_local_, d),
+      2.0f * math_utils::cross(d, anchor_a - a_->position),
       2.0f * -d.x,
       2.0f * -d.y,
-      2.0f * math_utils::cross(anchor_b_local_, -d),
+      2.0f * math_utils::cross(-d, anchor_b - b_->position),
   };
+
+  const auto j_t = j.transpose();
 
   const math::VecN<6> v = get_velocities();
   const math::MatMN<6, 6> inv_m = get_inv_m();
+
+  const auto lhs = j * inv_m * j.transpose();
+  const auto rhs = j * v * -1.0f;
+  const auto lamba = math::solve_linear_system(lhs, rhs);
+
+  const auto impulses = j_t * lamba;
+  a_->add_impulse_linear(math::Vec2{.x = impulses[0], .y = impulses[1]});
+  a_->add_impulse_angular(impulses[2]);
+  b_->add_impulse_linear(math::Vec2{.x = impulses[3], .y = impulses[4]});
+  b_->add_impulse_angular(impulses[5]);
 }
 
 } // namespace physics

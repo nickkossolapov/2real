@@ -48,11 +48,6 @@ void render_body(const Drawer& drawer, render::Framebuffer& fb, const physics::B
 } // namespace
 
 int main(int argc, char* argv[]) {
-  math::MatMN<2, 2> a{16, 3, 7, -11};
-  math::VecN<2> b{11, 13};
-
-  auto x = math::solve_linear_system(a, b, math::VecN<2>{1, 1});
-
   constexpr engine::SdlSettings settings{
       .width = 1000,
       .height = 800,
@@ -75,8 +70,12 @@ int main(int argc, char* argv[]) {
 
   physics::World world{};
 
-  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{14.0f, 20.0f}});
-  world.add_body(physics::Body{1.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{16.0f, 20.0f}});
+  physics::Body* a =
+      world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(1.0f), math::Vec2{.x = 20.0f, .y = 20.0f}});
+  physics::Body* b =
+      world.add_body(physics::Body{1.0f, 0.3f, physics::shape::Circle(1.0f), math::Vec2{.x = 30.0f, .y = 20.0f}});
+
+  world.add_joint_constraint(physics::JointConstraint(*a, *b, a->position));
 
   auto update = [&world](const float dt, const input::InputState& input) { world.update(dt); };
 

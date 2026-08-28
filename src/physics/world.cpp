@@ -19,6 +19,10 @@ void World::update(const float dt) {
     body->integrate_positions(dt);
   }
 
+  for (auto& constraint : joint_constraints_) {
+    constraint.solve();
+  }
+
   check_collisions();
 }
 

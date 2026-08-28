@@ -98,7 +98,7 @@ void Body::add_torque(const float torque) {
   net_torque_ += torque;
 }
 
-void Body::add_impulse(const math::Vec2 j) {
+void Body::add_impulse_linear(const math::Vec2 j) {
   if (is_static()) {
     return;
   }
@@ -106,7 +106,15 @@ void Body::add_impulse(const math::Vec2 j) {
   velocity += j * inv_mass_;
 }
 
-void Body::add_impulse(const math::Vec2 j, const math::Vec2 r) {
+void Body::add_impulse_angular(const float j) {
+  if (is_static()) {
+    return;
+  }
+
+  angular_velocity += j * inv_inertia_;
+}
+
+void Body::add_impulse_at_point(const math::Vec2 j, const math::Vec2 r) {
   if (is_static()) {
     return;
   }
