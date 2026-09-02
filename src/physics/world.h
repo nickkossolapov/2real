@@ -11,6 +11,8 @@ struct World {
   explicit World(const math::Vec2 gravity = {0.0f, -9.81})
       : gravity_(gravity) {}
 
+  std::unique_ptr<Body>& get_body(const int i) { return bodies_[i]; };
+
   std::vector<std::unique_ptr<Body>>& bodies() { return bodies_; }
 
   Body* add_body(Body body) {

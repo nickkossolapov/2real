@@ -12,15 +12,17 @@ void World::update(const float dt) {
   }
 
   for (auto& constraint : joint_constraints_) {
-    constraint.solve();
+    constraint.pre_solve(dt);
+  }
+
+  for (int i = 0; i < 5; ++i) {
+    for (auto& constraint : joint_constraints_) {
+      constraint.solve();
+    }
   }
 
   for (auto& body : bodies_) {
     body->integrate_positions(dt);
-  }
-
-  for (auto& constraint : joint_constraints_) {
-    constraint.solve();
   }
 
   check_collisions();

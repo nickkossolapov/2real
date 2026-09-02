@@ -11,7 +11,10 @@ private:
   math::Vec2 anchor_a_local_;
   math::Vec2 anchor_b_local_;
 
+  float bias_ = 0.0f;
+
   math::MatMN<1, 6> jacobian_ = {};
+  math::VecN<1> cached_lambda_ = {};
 
   math::MatMN<6, 6> get_inv_m() const;
 
@@ -24,7 +27,8 @@ public:
         anchor_a_local_(a.world_to_local_point(anchor)),
         anchor_b_local_(b.world_to_local_point(anchor)) {}
 
-  void solve() const;
+  void pre_solve(const float dt);
+  void solve();
 };
 
 struct ContactConstraint {
