@@ -70,11 +70,12 @@ int main(int argc, char* argv[]) {
 
   constexpr int ball_count = 10;
   for (int i = 1; i < ball_count; ++i) {
-    auto next =
-        world.add_body(physics::Body{1.0f, 0.3f, physics::shape::Circle(0.5f), math::Vec2{20.0f + 2.0f * i, 30.0f}});
+    auto next = world.add_body(
+        physics::Body{1.0f, 0.3f, physics::shape::Circle(0.5f), math::Vec2{20.0f + 2.0f * i, 30.0f}});
+
     std::unique_ptr<physics::Body>& prev = world.get_body(i - 1);
 
-    world.add_joint_constraint(physics::JointConstraint(*prev, *next, prev->position));
+    world.add_joint_constraint(physics::constraint::Joint(*prev, *next, prev->position));
   }
 
   auto update = [&world](const float dt, const input::InputState& input) { world.update(dt); };

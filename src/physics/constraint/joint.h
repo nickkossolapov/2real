@@ -1,11 +1,10 @@
 #pragma once
-#include "body.h"
 #include "math/mat_mn.h"
+#include "physics/body.h"
 
-namespace physics {
+namespace physics::constraint {
 
-struct JointConstraint {
-private:
+class Joint {
   Body* a_;
   Body* b_;
   math::Vec2 anchor_a_local_;
@@ -21,7 +20,7 @@ private:
   math::VecN<6> get_velocities() const;
 
 public:
-  explicit JointConstraint(Body& a, Body& b, const math::Vec2 anchor)
+  explicit Joint(Body& a, Body& b, const math::Vec2 anchor)
       : a_(&a),
         b_(&b),
         anchor_a_local_(a.world_to_local_point(anchor)),
@@ -31,14 +30,4 @@ public:
   void solve();
 };
 
-struct ContactConstraint {
-  Body* a;
-  Body* b;
-
-  math::MatMN<6, 6> get_inv_m() const;
-  math::VecN<6> get_velocities() const;
-
-  void solve();
-};
-
-} // namespace physics
+} // namespace physics::constraint

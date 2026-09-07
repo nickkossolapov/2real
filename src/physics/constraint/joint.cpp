@@ -1,10 +1,10 @@
-#include "constraint.h"
+#include "joint.h"
 
-#include "math_utils.h"
+#include "physics/math_utils.h"
 
-namespace physics {
+namespace physics::constraint {
 
-math::MatMN<6, 6> JointConstraint::get_inv_m() const {
+math::MatMN<6, 6> Joint::get_inv_m() const {
   math::MatMN<6, 6> inv_m{};
 
   inv_m(0, 0) = a_->inv_mass();
@@ -17,7 +17,7 @@ math::MatMN<6, 6> JointConstraint::get_inv_m() const {
   return inv_m;
 }
 
-math::VecN<6> JointConstraint::get_velocities() const {
+math::VecN<6> Joint::get_velocities() const {
   return math::VecN<6>{
       a_->velocity.x,
       a_->velocity.y,
@@ -28,7 +28,7 @@ math::VecN<6> JointConstraint::get_velocities() const {
   };
 }
 
-void JointConstraint::pre_solve(const float dt) {
+void Joint::pre_solve(const float dt) {
   const math::Vec2 anchor_a = a_->local_to_world_point(anchor_a_local_);
   const math::Vec2 anchor_b = b_->local_to_world_point(anchor_b_local_);
   const math::Vec2 d = anchor_a - anchor_b;
@@ -58,7 +58,7 @@ void JointConstraint::pre_solve(const float dt) {
   bias_ = beta / dt * c;
 }
 
-void JointConstraint::solve() {
+void Joint::solve() {
   const auto j = jacobian_;
   const auto j_t = j.transpose();
 
@@ -80,4 +80,4 @@ void JointConstraint::solve() {
   b_->add_impulse_angular(impulses[5]);
 }
 
-} // namespace physics
+} // namespace physics::constraint

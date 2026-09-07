@@ -8,7 +8,7 @@ AllowShortEnumsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 PackConstructorInitializers: Never
 AlwaysBreakAfterReturnType: None
-BinPackParameters: false
+BinPackParameters: OnePerLine
 BinPackArguments: false
 AllowAllArgumentsOnNextLine: false
 FixNamespaceComments: true
@@ -17,3 +17,4 @@ SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
 PenaltyReturnTypeOnItsOwnLine: 1000
 BreakBeforeBinaryOperators: NonAssignment
+PenaltyBreakAssignment: 300

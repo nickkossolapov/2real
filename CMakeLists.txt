@@ -15,18 +15,36 @@ add_library(
         src/engine/run.h
         src/engine/sdl.cpp
         src/engine/sdl.h
+        src/engine/sparse_logger.h
         src/engine/timing.h
         src/input/input.cpp
         src/input/input.h
         src/math/common.h
         src/math/mat4.h
+        src/math/mat_mn.h
         src/math/plane.h
         src/math/rect.h
         src/math/vec2.h
         src/math/vec3.h
         src/math/vec4.h
+        src/math/vec_n.h
         src/physics/body.cpp
         src/physics/body.h
+        src/physics/collision.cpp
+        src/physics/collision.h
+        src/physics/constraint/joint.cpp
+        src/physics/constraint/joint.h
+        src/physics/constraint/non-penetration.h
+        src/physics/contact.h
+        src/physics/force.cpp
+        src/physics/force.h
+        src/physics/math_utils.h
+        src/physics/resolution.cpp
+        src/physics/resolution.h
+        src/physics/shape.h
+        src/physics/transform.h
+        src/physics/world.cpp
+        src/physics/world.h
         src/render/clipping.cpp
         src/render/clipping.h
         src/render/color.h
@@ -48,24 +66,7 @@ add_library(
         src/scene/light.h
         src/scene/mesh.h
         src/scene/scene.h
-        src/physics/force.h
-        src/physics/force.cpp
-        src/physics/shape.h
         src/util/overload.h
-        src/physics/collision.h
-        src/physics/collision.cpp
-        src/physics/transform.h
-        src/physics/contact.h
-        src/physics/resolution.h
-        src/physics/resolution.cpp
-        src/physics/math_utils.h
-        src/physics/world.h
-        src/physics/world.cpp
-        src/engine/sparse_logger.h
-        src/physics/constraint.h
-        src/math/vec_n.h
-        src/math/mat_mn.h
-        src/physics/constraint.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
