@@ -40,6 +40,8 @@ struct Body {
 
   math::Vec2 world_to_local_point(const math::Vec2& point) const;
   math::Vec2 local_to_world_point(const math::Vec2& point) const;
+  math::Vec2 world_to_local_vector(const math::Vec2& v) const;
+  math::Vec2 local_to_world_vector(const math::Vec2& v) const;
 
   float inv_mass() const { return inv_mass_; }
   float inv_inertia() const { return inv_inertia_; }

@@ -145,6 +145,20 @@ math::Vec2 Body::local_to_world_point(const math::Vec2& point) const {
   return local_space + position;
 }
 
+math::Vec2 Body::world_to_local_vector(const math::Vec2& v) const {
+  return {
+      .x = std::cos(-rotation) * v.x + std::sin(-rotation) * v.y,
+      .y = -std::sin(-rotation) * v.x + std::cos(-rotation) * v.y,
+  };
+}
+
+math::Vec2 Body::local_to_world_vector(const math::Vec2& v) const {
+  return {
+      .x = std::cos(rotation) * v.x + std::sin(rotation) * v.y,
+      .y = -std::sin(rotation) * v.x + std::cos(rotation) * v.y,
+  };
+}
+
 void Body::clear_forces() {
   net_force_ = {};
   net_torque_ = 0;

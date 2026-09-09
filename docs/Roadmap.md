@@ -57,3 +57,4 @@ A lot of this will be following existing resources, so these are mostly referenc
 * Physics collision solvers
 	* https://www.havok.com/blog/how-havoks-constraint-solver-works-pgs-baumgarte/
 	* https://box2d.org/posts/2024/02/solver2d/
+- https://www.chrishecker.com/The_Mixed_Linear_Complementarity_Problem for penetration constraint

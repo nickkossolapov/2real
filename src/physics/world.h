@@ -1,7 +1,9 @@
 #pragma once
 #include "body.h"
 #include "constraint/joint.h"
+#include "constraint/non-penetration.h"
 
+#include <complex.h>
 #include <memory>
 #include <vector>
 
@@ -26,7 +28,7 @@ struct World {
   void add_joint_constraint(constraint::Joint constraint) { joint_constraints_.emplace_back(constraint); }
 
   void update(float dt);
-  void check_collisions();
+  std::vector<constraint::NonPenetration> check_collisions() const;
 
 private:
   math::Vec2 gravity_;

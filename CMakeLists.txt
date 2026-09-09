@@ -67,6 +67,7 @@ add_library(
         src/scene/mesh.h
         src/scene/scene.h
         src/util/overload.h
+        src/physics/constraint/non-penetration.cpp
 )
 
 target_compile_features(2real-engine PUBLIC cxx_std_20)
