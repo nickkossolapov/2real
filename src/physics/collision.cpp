@@ -18,9 +18,9 @@ std::optional<Contact> test(const Body& a, const shape::Circle& a_shape, const B
   Contact contact;
 
   contact.normal = ab.normalized();
-  contact.start = b.position - contact.normal * b_shape.radius;
-  contact.end = a.position + contact.normal * a_shape.radius;
-  contact.depth = (contact.end - contact.start).length();
+  contact.point_b = b.position - contact.normal * b_shape.radius;
+  contact.point_a = a.position + contact.normal * a_shape.radius;
+  contact.depth = (contact.point_a - contact.point_b).length();
 
   return contact;
 }
@@ -81,16 +81,16 @@ std::optional<Contact> test(const Body& a,
 
   if (ab_separation.distance > ba_separation.distance) {
     return Contact{
-        .start = ab_separation.point,
-        .end = ab_separation.point - ab_separation.axis * ab_separation.distance,
+        .point_a = ab_separation.point - ab_separation.axis * ab_separation.distance,
+        .point_b = ab_separation.point,
         .normal = ab_separation.axis,
         .depth = -ab_separation.distance,
     };
   }
 
   return Contact{
-      .start = ba_separation.point - ba_separation.axis * ba_separation.distance,
-      .end = ba_separation.point,
+      .point_a = ba_separation.point,
+      .point_b = ba_separation.point - ba_separation.axis * ba_separation.distance,
       .normal = -ba_separation.axis,
       .depth = -ba_separation.distance,
   };
@@ -127,8 +127,8 @@ std::optional<Contact> test(const Body& polygon,
       const float depth = circle_shape.radius - (circle.position - polygon_points[vertex]).length();
 
       return Contact{
-          .start = circle.position - normal * circle_shape.radius,
-          .end = polygon_points[vertex],
+          .point_b = circle.position - normal * circle_shape.radius,
+          .point_a = polygon_points[vertex],
           .normal = normal,
           .depth = depth,
       };
@@ -143,8 +143,8 @@ std::optional<Contact> test(const Body& polygon,
       const float depth = circle_shape.radius - (circle.position - polygon_points[end]).length();
 
       return Contact{
-          .start = circle.position - normal * circle_shape.radius,
-          .end = polygon_points[end],
+          .point_b = circle.position - normal * circle_shape.radius,
+          .point_a = polygon_points[end],
           .normal = normal,
           .depth = depth,
       };
@@ -161,8 +161,8 @@ std::optional<Contact> test(const Body& polygon,
   const float depth = circle_shape.radius - max_projection;
 
   return Contact{
-      .start = circle.position - normal * circle_shape.radius,
-      .end = circle.position - normal * (circle_shape.radius - depth),
+      .point_b = circle.position - normal * circle_shape.radius,
+      .point_a = circle.position - normal * (circle_shape.radius - depth),
       .normal = normal,
       .depth = depth,
   };

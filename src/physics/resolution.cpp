@@ -17,9 +17,9 @@ void resolve_penetration(Body& a, Body& b, const Contact& contact) {
 }
 
 void resolve_impulse(Body& a, Body& b, const Contact& contact) {
-  const math::Vec2 ra = contact.end - a.position;
+  const math::Vec2 ra = contact.point_a - a.position;
   const math::Vec2 va = a.velocity + math_utils::right_perpendicular(ra) * a.angular_velocity;
-  const math::Vec2 rb = contact.start - b.position;
+  const math::Vec2 rb = contact.point_b - b.position;
   const math::Vec2 vb = b.velocity + math_utils::right_perpendicular(rb) * b.angular_velocity;
 
   const math::Vec2 v_rel = va - vb;

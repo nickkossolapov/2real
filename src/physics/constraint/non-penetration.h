@@ -11,11 +11,12 @@ class NonPenetration {
   math::Vec2 point_a_local_;
   math::Vec2 point_b_local_;
   math::Vec2 normal_a_local_;
+  float friction_;
 
   float bias_ = 0.0f;
 
-  math::MatMN<1, 6> jacobian_ = {};
-  math::VecN<1> cached_lambda_ = {};
+  math::MatMN<2, 6> jacobian_ = {};
+  math::VecN<2> cached_lambda_ = {};
 
   math::MatMN<6, 6> get_inv_m() const;
 
@@ -25,9 +26,10 @@ public:
   explicit NonPenetration(Body& a, Body& b, const Contact& contact)
       : a_(&a),
         b_(&b),
-        point_a_local_(a.world_to_local_point(contact.start)),
-        point_b_local_(b.world_to_local_point(contact.end)),
-        normal_a_local_(a.world_to_local_vector(contact.normal)) {}
+        point_a_local_(a.world_to_local_point(contact.point_a)),
+        point_b_local_(b.world_to_local_point(contact.point_b)),
+        normal_a_local_(a.world_to_local_vector(contact.normal)),
+        friction_(std::max(a.friction, b.friction)) {}
 
   void pre_solve(float dt);
   void solve();

@@ -2,7 +2,6 @@
 
 #include "collision.h"
 #include "constraint/non-penetration.h"
-#include "resolution.h"
 
 namespace physics {
 

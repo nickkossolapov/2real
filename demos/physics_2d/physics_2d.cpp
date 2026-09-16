@@ -66,11 +66,11 @@ int main(int argc, char* argv[]) {
 
   physics::World world{};
 
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f}});
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{2.0f, 17.0f}});
-  world.add_body(physics::Body{0.0f, 0.2f, physics::shape::box(2.0f, 28.0f), math::Vec2{48.0f, 17.0f}});
-  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
-  world.add_body(physics::Body{0.0f, 0.3f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, 0.4f, physics::shape::box(48.0f, 2.0f), math::Vec2{25.0f, 2.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, 0.4f, physics::shape::box(2.0f, 28.0f), math::Vec2{2.0f, 17.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, 0.4f, physics::shape::box(2.0f, 28.0f), math::Vec2{48.0f, 17.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, 0.4f, physics::shape::box(6.0f, 6.0f), math::Vec2{30.0f, 18.0f}});
+  world.add_body(physics::Body{0.0f, 0.3f, 0.4f, physics::shape::Circle(5.0f), math::Vec2{15.0f, 18.0f}});
 
   world.bodies()[3]->rotation = 1.4f;
 
@@ -93,11 +93,11 @@ int main(int argc, char* argv[]) {
                .y = (settings.height - state.cursor_position.y) / pixels_per_meter};
 
     if (events.primary == input::Event::Released) {
-      world.add_body(physics::Body{1.0f, 0.5f, physics::shape::Circle(1.0f), pointer});
+      world.add_body(physics::Body{1.0f, 0.4f, 0.4f, physics::shape::Circle(1.0f), pointer});
     }
 
     if (events.secondary == input::Event::Released) {
-      world.add_body(physics::Body{1.0f, 0.5f, physics::shape::box(2.0f, 2.0f), pointer});
+      world.add_body(physics::Body{1.0f, 0.4f, 0.4f, physics::shape::box(2.0f, 2.0f), pointer});
     }
   };
 

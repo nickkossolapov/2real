@@ -58,3 +58,7 @@ A lot of this will be following existing resources, so these are mostly referenc
 	* https://www.havok.com/blog/how-havoks-constraint-solver-works-pgs-baumgarte/
 	* https://box2d.org/posts/2024/02/solver2d/
 - https://www.chrishecker.com/The_Mixed_Linear_Complementarity_Problem for penetration constraint
+- https://www.toptal.com/developers/game/video-game-physics-part-iii-constrained-rigid-body-simulation
+- https://gamephysicsweekend.github.io/
+- https://myselph.github.io/game_physics/
+- 
