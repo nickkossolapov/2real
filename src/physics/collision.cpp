@@ -6,7 +6,10 @@ namespace physics::collision {
 
 namespace {
 
-std::optional<Contact> test(const Body& a, const shape::Circle& a_shape, const Body& b, const shape::Circle& b_shape) {
+std::optional<std::vector<Contact>> test(const Body& a,
+                                         const shape::Circle& a_shape,
+                                         const Body& b,
+                                         const shape::Circle& b_shape) {
 
   const math::Vec2 ab = b.position - a.position;
   const float radius_sum = a_shape.radius + b_shape.radius;
@@ -22,7 +25,7 @@ std::optional<Contact> test(const Body& a, const shape::Circle& a_shape, const B
   contact.point_a = a.position + contact.normal * a_shape.radius;
   contact.depth = (contact.point_a - contact.point_b).length();
 
-  return contact;
+  return std::vector{contact};
 }
 
 struct PolygonSeparation {
@@ -60,10 +63,10 @@ PolygonSeparation find_min_separation(const std::vector<math::Vec2>& a, const st
   return separation;
 }
 
-std::optional<Contact> test(const Body& a,
-                            const shape::Polygon& a_shape,
-                            const Body& b,
-                            const shape::Polygon& b_shape) {
+std::optional<std::vector<Contact>> test(const Body& a,
+                                         const shape::Polygon& a_shape,
+                                         const Body& b,
+                                         const shape::Polygon& b_shape) {
   const auto a_points = math_utils::to_world(a.position, a_shape.points, a.rotation);
   const auto b_points = math_utils::to_world(b.position, b_shape.points, b.rotation);
 
@@ -79,27 +82,27 @@ std::optional<Contact> test(const Body& a,
     return {};
   }
 
+  Contact contact;
+
   if (ab_separation.distance > ba_separation.distance) {
-    return Contact{
-        .point_a = ab_separation.point - ab_separation.axis * ab_separation.distance,
-        .point_b = ab_separation.point,
-        .normal = ab_separation.axis,
-        .depth = -ab_separation.distance,
-    };
+    contact.point_a = ab_separation.point - ab_separation.axis * ab_separation.distance;
+    contact.point_b = ab_separation.point;
+    contact.normal = ab_separation.axis;
+    contact.depth = -ab_separation.distance;
+  } else {
+    contact.point_a = ba_separation.point;
+    contact.point_b = ba_separation.point - ba_separation.axis * ba_separation.distance;
+    contact.normal = -ba_separation.axis;
+    contact.depth = -ba_separation.distance;
   }
 
-  return Contact{
-      .point_a = ba_separation.point,
-      .point_b = ba_separation.point - ba_separation.axis * ba_separation.distance,
-      .normal = -ba_separation.axis,
-      .depth = -ba_separation.distance,
-  };
+  return std::vector{contact};
 }
 
-std::optional<Contact> test(const Body& polygon,
-                            const shape::Polygon& polygon_shape,
-                            const Body& circle,
-                            const shape::Circle& circle_shape) {
+std::optional<std::vector<Contact>> test(const Body& polygon,
+                                         const shape::Polygon& polygon_shape,
+                                         const Body& circle,
+                                         const shape::Circle& circle_shape) {
   const auto polygon_points = math_utils::to_world(polygon.position, polygon_shape.points, polygon.rotation);
 
   int vertex = 0;
@@ -126,12 +129,12 @@ std::optional<Contact> test(const Body& polygon,
       const math::Vec2 normal = (circle.position - polygon_points[vertex]).normalized();
       const float depth = circle_shape.radius - (circle.position - polygon_points[vertex]).length();
 
-      return Contact{
-          .point_b = circle.position - normal * circle_shape.radius,
+      return std::vector{Contact{
           .point_a = polygon_points[vertex],
+          .point_b = circle.position - normal * circle_shape.radius,
           .normal = normal,
           .depth = depth,
-      };
+      }};
     }
 
     return {};
@@ -142,12 +145,12 @@ std::optional<Contact> test(const Body& polygon,
       const math::Vec2 normal = (circle.position - polygon_points[end]).normalized();
       const float depth = circle_shape.radius - (circle.position - polygon_points[end]).length();
 
-      return Contact{
-          .point_b = circle.position - normal * circle_shape.radius,
+      return std::vector{Contact{
           .point_a = polygon_points[end],
+          .point_b = circle.position - normal * circle_shape.radius,
           .normal = normal,
           .depth = depth,
-      };
+      }};
     }
 
     return {};
@@ -160,30 +163,30 @@ std::optional<Contact> test(const Body& polygon,
   const math::Vec2 normal = math_utils::normal(polygon_points[end] - polygon_points[vertex]);
   const float depth = circle_shape.radius - max_projection;
 
-  return Contact{
-      .point_b = circle.position - normal * circle_shape.radius,
+  return std::vector{Contact{
       .point_a = circle.position - normal * (circle_shape.radius - depth),
+      .point_b = circle.position - normal * circle_shape.radius,
       .normal = normal,
       .depth = depth,
-  };
+  }};
 }
 
-std::optional<Contact> test(const Body& circle,
-                            const shape::Circle& circle_shape,
-                            const Body& polygon,
-                            const shape::Polygon& polygon_shape) {
+std::optional<std::vector<Contact>> test(const Body& circle,
+                                         const shape::Circle& circle_shape,
+                                         const Body& polygon,
+                                         const shape::Polygon& polygon_shape) {
   const auto contact = test(polygon, polygon_shape, circle, circle_shape);
 
   if (!contact) {
     return {};
   }
 
-  return contact->flipped();
+  return std::vector{contact->at(0).flipped()};
 }
 
 } // namespace
 
-std::optional<Contact> test(const Body& a, const Body& b) {
+std::optional<std::vector<Contact>> test(const Body& a, const Body& b) {
   if (a.is_static() && b.is_static()) {
     return {};
   }

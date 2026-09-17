@@ -48,8 +48,10 @@ std::vector<constraint::NonPenetration> World::check_collisions() const {
         continue;
       }
 
-      if (auto contact = collision::test(*a, *b)) {
-        collisions.emplace_back(*a, *b, *contact);
+      if (auto contacts = collision::test(*a, *b)) {
+        for (auto& contact : *contacts) {
+          collisions.emplace_back(*a, *b, contact);
+        }
       }
     }
   }

@@ -7,6 +7,6 @@
 
 namespace physics::collision {
 
-std::optional<Contact> test(const Body& a, const Body& b);
+std::optional<std::vector<Contact>> test(const Body& a, const Body& b);
 
 } // namespace physics::collision

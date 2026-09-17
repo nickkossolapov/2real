@@ -39,8 +39,6 @@ add_library(
         src/physics/force.cpp
         src/physics/force.h
         src/physics/math_utils.h
-        src/physics/resolution.cpp
-        src/physics/resolution.h
         src/physics/shape.h
         src/physics/transform.h
         src/physics/world.cpp
